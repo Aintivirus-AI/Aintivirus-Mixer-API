@@ -65,7 +65,7 @@ mixer-api/
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/McAfee-CryptoMixer/mixer-api.git
+   git clone https://github.com/Aintivirus-AI/Aintivirus-Mixer-API.git
    cd mixer-api
    ```
 
