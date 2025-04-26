@@ -1,0 +1,220 @@
+// ** import external libraries
+import Hapi from '@hapi/hapi'
+import Joi from '@hapi/joi'
+
+// ** import controller
+import { DataController, MixerController } from '../../../controller'
+
+// ** import helper
+import { GatewayHelper } from '../../../helper'
+
+// ** import custom utilities
+import { ResponseUtil } from '../../../utils'
+
+// ** import app constants
+import { METHOD, VERSION, ENDPOINT } from '../../../constant'
+import { join } from 'path'
+
+const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
+    /**
+     * GET endpoints
+     */
+    {
+        method: METHOD.GET,
+        path: VERSION.V1 + ENDPOINT.GET.DEFAULT,
+        options: {
+            handler: (request, reply) => {
+                return reply.view('index')
+            },
+            description: 'API base default public endpoints (GET)',
+            notes: 'Hit the endpoint to check if server is alive',
+            tags: ['baseurl', 'default', 'check api status']
+        }
+    },
+    {
+        method: METHOD.GET,
+        path: VERSION.V1 + ENDPOINT.GET.IP,
+        options: {
+            handler: async (request, reply) => {
+                try {
+                    const response = await GatewayHelper.getIpDetail(request.info.remoteAddress)
+
+                    return ResponseUtil.sendResponse(response, reply)
+                }
+                catch(error) {
+                    throw error
+                }
+            },
+            description: 'API for checking IP address information',
+            notes: 'Hit the endpoint to get remote IP detail',
+            tags: ['baseurl', 'default', 'check ip detail']
+        }
+    },
+    /**
+     * POST endpoints
+     */
+    {
+        method: METHOD.POST,
+        path: VERSION.V1 + ENDPOINT.POST.DEPOSIT_ETH,
+        options: {
+            handler: async (request, reply) => {
+                try {
+                    const response = await MixerController.depositETH(request.payload)
+
+                    return ResponseUtil.sendResponse(response, reply)
+                }
+                catch(error) {
+                    console.error(error)
+                    return Object(error)
+                }
+            },
+            validate: {
+                failAction: ResponseUtil.failAction,
+                payload: Joi.object({
+                    amount: Joi.string().required(),
+                    currency: Joi.string().required(),
+                    sender: Joi.string().required(),
+                })
+            },
+            description: 'API base default public endpoints (POST)',
+            notes: 'Hit the endpoint to check if server is alive',
+            tags: ['baseurl', 'default', 'check api status']
+        }
+    },
+    {
+        method: METHOD.POST,
+        path: VERSION.V1 + ENDPOINT.POST.DEPOSIT_SOL,
+        options: {
+            handler: async (request, reply) => {
+                try {
+                    const response = await MixerController.depositSOL(request.payload)
+
+                    return ResponseUtil.sendResponse(response, reply)
+                }
+                catch(error) {
+                    console.error(error)
+                    return Object(error)
+                }
+            },
+            validate: {
+                failAction: ResponseUtil.failAction,
+                payload: Joi.object({
+                    amount: Joi.number().required(),
+                    currency: Joi.string().required(),
+                    sender: Joi.string().required(),
+                })
+            },
+            description: 'API base default public endpoints (POST)',
+            notes: 'Hit the endpoint to check if server is alive',
+            tags: ['baseurl', 'default', 'check api status']
+        }
+    },
+    {
+        method: METHOD.POST,
+        path: VERSION.V1 + ENDPOINT.POST.VALIDATE_ETH_DEPOSIT,
+        options: {
+            handler: async (request, reply) => {
+                try {
+                    const response = await MixerController.validateETHDeposit(request.payload)
+
+                    return ResponseUtil.sendResponse(response, reply)
+                }
+                catch(error) {
+                    console.error(error)
+                    return Object(error)
+                }
+            },
+            validate: {
+                failAction: ResponseUtil.failAction,
+                payload: Joi.object({
+                    sessionId: Joi.string().required(),
+                    txHash: Joi.string().required(),
+                })
+            },
+            description: 'API base default public endpoints (POST)',
+            notes: 'Hit the endpoint to check if server is alive',
+            tags: ['baseurl', 'default', 'check api status']
+        }
+    },
+    {
+        method: METHOD.POST,
+        path: VERSION.V1 + ENDPOINT.POST.VALIDATE_SOL_DEPOSIT,
+        options: {
+            handler: async (request, reply) => {
+                try {
+                    const response = await MixerController.validateSOLDeposit(request.payload)
+
+                    return ResponseUtil.sendResponse(response, reply)
+                }
+                catch(error) {
+                    console.error(error)
+                    return Object(error)
+                }
+            },
+            validate: {
+                failAction: ResponseUtil.failAction,
+                payload: Joi.object({
+                    sessionId: Joi.string().required(),
+                    txHash: Joi.string().required(),
+                })
+            },
+            description: 'API base default public endpoints (POST)',
+            notes: 'Hit the endpoint to check if server is alive',
+            tags: ['baseurl', 'default', 'check api status']
+        }
+    },
+    {
+        method: METHOD.POST,
+        path: VERSION.V1 + ENDPOINT.POST.WITHDRAW_ETH,
+        options: {
+            handler: async (request, reply) => {
+                try {
+                    const response = await MixerController.withdrawETH(request.payload)
+
+                    return ResponseUtil.sendResponse(response, reply)
+                }
+                catch(error) {
+                    return Object(error)
+                }
+            },
+            validate: {
+                failAction: ResponseUtil.failAction,
+                payload: Joi.object({
+                    note: Joi.string().required(),
+                    receiver: Joi.string().required(),
+                })
+            },
+            description: 'API base default public endpoints (POST)',
+            notes: 'Hit the endpoint to check if server is alive',
+            tags: ['baseurl', 'default', 'check api status']
+        }
+    },
+    {
+        method: METHOD.POST,
+        path: VERSION.V1 + ENDPOINT.POST.WITHDRAW_SOL,
+        options: {
+            handler: async (request, reply) => {
+                try {
+                    const response = await MixerController.withdrawSOL(request.payload)
+
+                    return ResponseUtil.sendResponse(response, reply)
+                }
+                catch(error) {
+                    return Object(error)
+                }
+            },
+            validate: {
+                failAction: ResponseUtil.failAction,
+                payload: Joi.object({
+                    note: Joi.string().required(),
+                    receiver: Joi.string().required()
+                })
+            },
+            description: 'API base default public endpoints (POST)',
+            notes: 'Hit the endpoint to check if server is alive',
+            tags: ['baseurl', 'default', 'check api status']
+        }
+    }
+]
+
+export default PUBLIC_ROUTER

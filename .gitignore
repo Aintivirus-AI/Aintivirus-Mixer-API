@@ -1,0 +1,12 @@
+node_modules
+
+dist
+
+package-lock.json
+
+.env
+
+*.env
+
+src/store/db/solana_ledger.db
+src/store/db/session_store.db
