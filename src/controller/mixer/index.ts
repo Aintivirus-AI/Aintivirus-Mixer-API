@@ -27,10 +27,16 @@ import { ERC20_ABI } from "../../constant/abi/ERC20"
 import { MIXER_ABI } from "../../constant/abi/Mixer"
 
 interface MixerContractInterface {
-    addCommitment(commitment: string): Promise<ContractTransaction>;
-    setNullifierHash(nullifierHash: string): Promise<ContractTransaction>;
+    addCommitment4ETH(commitment: string): Promise<ContractTransaction>;
+    setNullifierHash4ETH(nullifierHash: string): Promise<ContractTransaction>;
+
+    addCommitment4SOL(commitment: string): Promise<ContractTransaction>;
+    setNullifierHash4SOL(nullifierHash: string): Promise<ContractTransaction>;
+
+    verifySolWithdrawal(_nullifierHash: any, _pA: any, _pB: any, _pC: any, _pubSignals: any): Promise<ContractTransaction>;
+
     connect(signerOrProvider: Signer): MixerContractInterface;
-  }
+}
 
 class MixerController {
     static depositETH = async (payload: RequestPayload): Promise<ResponsePayload> => {
@@ -73,7 +79,7 @@ class MixerController {
             const zkData = await ZkSnark.createZkProof(currency, amountInWei.toString())
 
             if (isNative) {
-                const depositTransaction = await mixerContract.deposit.populateTransaction(currency, amountInWei.toString(), { value: amountInWei })
+                const depositTransaction = await mixerContract.deposit.populateTransaction(currency, amountInWei.toString(), zkData.publicSignals[0], { value: amountInWei })
 
                 // Sanitize BigInts in transaction object
                 const safeTransaction = JSON.parse(
@@ -88,7 +94,7 @@ class MixerController {
                 const tokenContract = new ethers.Contract(currency, ERC20_ABI, provider)
 
                 const approveTransaction = await tokenContract.approve.populateTransaction(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, amountInWei.toString())
-                const depositTransaction = await mixerContract.deposit.populateTransaction(currency, amountInWei.toString())
+                const depositTransaction = await mixerContract.deposit.populateTransaction(currency, amountInWei.toString(), zkData.publicSignals[0])
 
                 transactions.push(approveTransaction)
                 transactions.push(depositTransaction)
@@ -156,7 +162,7 @@ class MixerController {
             if (isNative) {
                 amountInLamport = solanaSDK.splDecimalize(amount)
                 transaction = await solanaSDK.buildSendSOLTransaction(operatorSOLWallet.publicKey.toString(), amount, sender)
-                
+
                 const ethPrice = await CoinMarketcapAPI.getQuoteBySymbol('SOL', 'ETH', amount)
                 etherAmount = ethers.parseEther(ethPrice.toFixed(3).toString())
             }
@@ -164,7 +170,7 @@ class MixerController {
                 const splTokenDecimals = await solanaSDK.getTokenDecimals(currency)
                 amountInLamport = solanaSDK.splDecimalize(amount, splTokenDecimals)
                 transaction = await solanaSDK.buildSendSPLTransaction(currency, operatorSOLWallet.publicKey.toString(), Number(amount), sender)
-                
+
                 const erc20TokenDecimals = await etherToken.decimals()
                 etherAmount = ethers.parseUnits(amount.toFixed(3).toString(), erc20TokenDecimals)
             }
@@ -264,21 +270,6 @@ class MixerController {
             }
 
             const note = base58.encode(Buffer.from(JSON.stringify(noteObj)))
-
-            // Register deposit in Solana ledger
-            const solanaLedger = new SolanaLedger('./src/store/db/solana_ledger.db')
-            await solanaLedger.initialize()
-
-            // const duplicatedCommitment = await solanaLedger.read(JSON.parse(session.zkSecret).publicSignals[0].toString())
-            // if (duplicatedCommitment) {
-            //     throw new Error('Error: Duplicated commitment')
-            // }
-
-            await solanaLedger.create(JSON.parse(session.zkSecret).publicSignals[0].toString(), {
-                commitment: JSON.parse(session.zkSecret).publicSignals[0],
-                nullifierHash: false
-            })
-            await solanaLedger.close()
 
             // Clear Zk secret note in session
             await sessionStore.update(sessionId, { zkSecret: '' })
@@ -424,21 +415,6 @@ class MixerController {
 
             const note = base58.encode(Buffer.from(JSON.stringify(noteObj)))
 
-            // Register deposit in Solana ledger
-            // const solanaLedger = new SolanaLedger('./src/store/db/solana_ledger.db')
-            // await solanaLedger.initialize()
-
-            // const duplicatedCommitment = await solanaLedger.read(JSON.parse(session.zkSecret).publicSignals[0].toString())
-            // if (duplicatedCommitment) {
-            //     throw new Error('Error: Duplicated commitment')
-            // }
-
-            // await solanaLedger.create(JSON.parse(session.zkSecret).publicSignals[0].toString(), {
-            //     commitment: JSON.parse(session.zkSecret).publicSignals[0],
-            //     nullifierHash: false
-            // })
-            // await solanaLedger.close()
-
             // Clear Zk secret note in session
             await sessionStore.update(sessionId, { zkSecret: '' })
             await sessionStore.close()
@@ -449,7 +425,7 @@ class MixerController {
             const mixerContract = new ethers.Contract(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, MIXER_ABI, operatorETHWallet) as unknown as MixerContractInterface
             const signedMixerContract = mixerContract.connect(operatorETHWallet)
 
-            await signedMixerContract.addCommitment(noteObj.zkData.publicSignals[0])
+            await signedMixerContract.addCommitment4ETH(noteObj.zkData.publicSignals[0])
 
             return { data: { note } }
         }
@@ -467,36 +443,26 @@ class MixerController {
                 ).toString('utf8')
             )
 
-            // Register deposit in Solana ledger
-            const solanaLedger = new SolanaLedger('./src/store/db/solana_ledger.db')
-            await solanaLedger.initialize()
-
-            const depositProof = await solanaLedger.read(noteObj.zkData.publicSignals[0].toString())
-            const isValid = await ZkSnark.offchainVerify(noteObj.zkData)
-
-            if (!depositProof) {
-                throw new Error('Error: Deposit proof not found')
-            }
-            if (depositProof.nullifierHash) {
-                throw new Error('Error: Deposit already withdrawn')
-            }
-            if (!isValid) {
-                throw new Error('Error: Invalid withdraw proof')
-            }
-
-            await solanaLedger.update(noteObj.zkData.publicSignals[0].toString(), {
-                nullifierHash: true
-            })
-            await solanaLedger.close()
-
-            const hex = ethers.zeroPadValue(ethers.toBeHex(noteObj.zkData.publicSignals[3]), 20);
-            const tokenAddress = ethers.getAddress(hex);
-
             const solanaSDK = new SolanaSDK(ENV.SOL_POOL_PRIVKEY, ENV.SOLANA_RPC_URL)
             const provider = new ethers.JsonRpcProvider(ENV.ETHEREUM_RPC_URL)
             const operatorETHWallet = new ethers.Wallet(ENV.ETH_POOL_PRIVKEY, provider)
             const mixerContract = new ethers.Contract(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, MIXER_ABI, operatorETHWallet) as unknown as MixerContractInterface
             const signedMixerContract = mixerContract.connect(operatorETHWallet)
+
+            const isValid = await mixerContract.verifySolWithdrawal(
+                noteObj.zkData.nullifierHash,
+                noteObj.zkData.calldata.a,
+                noteObj.zkData.calldata.b,
+                noteObj.zkData.calldata.c,
+                noteObj.zkData.calldata.psInput,
+            )
+
+            if (!isValid) {
+                throw new Error('Error: Invalid withdraw proof')
+            }
+
+            const hexDecimalizedTokenAddressFromZkData = ethers.zeroPadValue(ethers.toBeHex(noteObj.zkData.publicSignals[3]), 20);
+            const tokenAddress = ethers.getAddress(hexDecimalizedTokenAddressFromZkData);
 
             if (tokenAddress === MIX_CONFIG.ADDRESS.ETH_COIN_ADDRESS) {
                 const amount = ethers.formatEther(noteObj.zkData.publicSignals[4])
@@ -504,7 +470,7 @@ class MixerController {
 
                 const tx = await solanaSDK.sendSol(receiver, solAmount)
 
-                await signedMixerContract.setNullifierHash(noteObj.zkData.nullifierHash)
+                await signedMixerContract.setNullifierHash4SOL(noteObj.zkData.nullifierHash)
 
                 return {
                     data: {
@@ -519,7 +485,7 @@ class MixerController {
 
                 const tx = await solanaSDK.sendSPLToken(MIX_CONFIG.ETH2SOL_CURRENCY_MAP[tokenAddress], receiver, Number(amount))
 
-                await signedMixerContract.setNullifierHash(noteObj.zkData.nullifierHash)
+                await signedMixerContract.setNullifierHash4SOL(noteObj.zkData.nullifierHash)
 
                 return {
                     data: {
@@ -554,14 +520,6 @@ class MixerController {
                 noteObj.zkData.calldata.psInput,
                 receiver
             )
-
-            const solanaLedger = new SolanaLedger('./src/store/db/solana_ledger.db')
-            await solanaLedger.initialize()
-
-            await solanaLedger.update(noteObj.zkData.publicSignals[0].toString(), {
-                nullifierHash: true
-            })
-            await solanaLedger.close()
 
             return {
                 data: transaction

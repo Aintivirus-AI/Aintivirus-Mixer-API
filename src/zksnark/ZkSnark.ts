@@ -36,13 +36,13 @@ export default class ZkSnark {
             const c = argv[2];
             const psInput = argv[3];
 
-            // const commitment = publicSignals[0];
-            // const hashedCommitment = ethers.keccak256(ethers.solidityPacked(["uint256"], [commitment]))
-            const nullifierHash = ethers.keccak256(ethers.solidityPacked(["uint256"], [input.nullifier]))
+            const commitment = publicSignals[0];
+            const hashedCommitment = ethers.keccak256(ethers.solidityPacked(["uint256"], [commitment]))
+            // const nullifierHash = ethers.keccak256(ethers.solidityPacked(["uint256"], [input.nullifier]))
             // const keystring = JSON.stringify({ proof, publicSignals, nullifier: input.nullifier });
 
             // return base58.encode(Buffer.from(keystring))
-            return { proof, publicSignals, nullifier: input.nullifier, nullifierHash, calldata: { a, b, c, psInput } }
+            return { proof, publicSignals, nullifier: input.nullifier, nullifierHash: hashedCommitment, calldata: { a, b, c, psInput } }
         }
         catch (error) {
             throw error
