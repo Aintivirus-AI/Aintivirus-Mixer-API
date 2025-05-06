@@ -10,6 +10,9 @@ export interface Session {
     amount: number;
     currency: string;
     zkSecret: string;
+    secret: string;
+    nullifier: string;
+    commitment: string;
 }
 
 class SessionStore {
@@ -18,7 +21,9 @@ class SessionStore {
 
     /**
      * Constructor to initialize the file path of the database
-     * @param dbFilePath - Path to the SQLite database file
+     * @param dbFilePath - Path to the SQLite lesquels
+
+database file
      */
     constructor(dbFilePath: string) {
         this.dbFilePath = dbFilePath;
@@ -42,12 +47,14 @@ class SessionStore {
                     sender TEXT NOT NULL,
                     amount REAL NOT NULL,
                     currency TEXT NOT NULL,
-                    zkSecret TEXT NOT NULL
+                    zkSecret TEXT NOT NULL,
+                    secret TEXT NOT NULL,
+                    nullifier TEXT NOT NULL,
+                    commitment TEXT NOT NULL
                 )
             `);
-        }
-        catch(error) {
-            throw error
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -57,20 +64,22 @@ class SessionStore {
      */
     async create(session: Session): Promise<void> {
         try {
-            const { id, expiresAt, txHash, sender, amount, currency, zkSecret } = session;
+            const { id, expiresAt, txHash, sender, amount, currency, zkSecret, secret, nullifier, commitment } = session;
             await this.db.run(
-                `INSERT INTO session (id, expiresAt, txHash, sender, amount, currency, zkSecret) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO session (id, expiresAt, txHash, sender, amount, currency, zkSecret, secret, nullifier, commitment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 id,
                 expiresAt,
                 txHash,
                 sender,
                 amount,
                 currency,
-                zkSecret
+                zkSecret,
+                secret,
+                nullifier,
+                commitment
             );
-        }
-        catch(error) {
-            throw error
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -85,9 +94,8 @@ class SessionStore {
                 'SELECT * FROM session WHERE id = ?',
                 id
             );
-        }
-        catch(error) {
-            throw error
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -106,21 +114,23 @@ class SessionStore {
                 ...session,
             };
     
-            const { expiresAt, txHash, sender, amount, currency, zkSecret } = updated;
+            const { expiresAt, txHash, sender, amount, currency, zkSecret, secret, nullifier, commitment } = updated;
     
             await this.db.run(
-                `UPDATE session SET expiresAt = ?, txHash = ?, sender = ?, amount = ?, currency = ?, zkSecret = ? WHERE id = ?`,
+                `UPDATE session SET expiresAt = ?, txHash = ?, sender = ?, amount = ?, currency = ?, zkSecret = ?, secret = ?, nullifier = ?, commitment = ? WHERE id = ?`,
                 expiresAt,
                 txHash,
                 sender,
                 amount,
                 currency,
                 zkSecret,
+                secret,
+                nullifier,
+                commitment,
                 id
             );
-        }
-        catch(error) {
-            throw error
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -131,9 +141,8 @@ class SessionStore {
     async delete(id: string): Promise<void> {
         try {
             await this.db.run('DELETE FROM session WHERE id = ?', id);
-        }
-        catch(error) {
-            throw error
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -144,9 +153,8 @@ class SessionStore {
     async readAll(): Promise<Session[]> {
         try {
             return await this.db.all<Session[]>('SELECT * FROM session');
-        }
-        catch(error) {
-            throw error
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -156,9 +164,8 @@ class SessionStore {
     async close(): Promise<void> {
         try {
             await this.db.close();
-        }
-        catch(error) {
-            throw error
+        } catch (error) {
+            throw error;
         }
     }
 }

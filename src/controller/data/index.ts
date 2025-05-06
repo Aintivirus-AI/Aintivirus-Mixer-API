@@ -8,7 +8,12 @@ class DataController {
      * @returns {ResponsePayload}
      */
     static checkResponse = (payload: RequestPayload): ResponsePayload => {
-        return { data: payload }
+        try {
+            return { data: payload }
+        }
+        catch(error) {
+            throw error
+        }
     }
 }
 

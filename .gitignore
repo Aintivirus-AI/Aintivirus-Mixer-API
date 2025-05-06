@@ -10,3 +10,5 @@ package-lock.json
 
 src/store/db/solana_ledger.db
 src/store/db/session_store.db
+
+src/zksnark
