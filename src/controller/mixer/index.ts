@@ -455,49 +455,62 @@ class MixerController {
                 true
             )
 
-            console.log("Nullifier Hash", nullifierHash)
-            console.log(withdrawalProof)
-
-            const isValid = await aintiVirusMixer.verifySolWithdrawal(
+            const validationTx = await aintiVirusMixer.verifySolWithdrawal(
                 withdrawalProof.calldata.a,
                 withdrawalProof.calldata.b,
                 withdrawalProof.calldata.c,
                 withdrawalProof.publicSignals
             )
 
-            if (!isValid) {
-                throw Boom.internal('Error: Invalid withdrawal proof')
-            }
+            await validationTx.wait()
 
             if (currency === MIX_CONFIG.ADDRESS.ETH_COIN_ADDRESS) {
                 const formattedAmount = ethers.formatEther(amount)
                 const solAmount = await CoinMarketcapAPI.getQuoteBySymbol('ETH', 'sol', formattedAmount)
-
-                const txSig = await solanaSDK.sendSol(receiver, solAmount)
-
-                const tx = await aintiVirusMixer.setNullifierForSolWithdrawal(nullifierHash.toString())
-                await tx.wait()
-
-                return {
-                    data: {
-                        txSig
+                try {
+                    const txSig = await solanaSDK.sendSol(receiver, solAmount)
+    
+                    const tx = await aintiVirusMixer.setNullifierForSolWithdrawal(nullifierHash.toString())
+                    await tx.wait()
+                    
+                    return {
+                        data: {
+                            txSig
+                        }
                     }
                 }
+                catch (error) {
+                    const tx = await aintiVirusMixer.revertNullifierForSolWithdrawal(nullifierHash.toString())
+                    await tx.wait()
+                    console.log("Nullifier reverted")
+
+                    throw Boom.internal('Error: Failed to send ETH to receiver')
+                }
+
             }
             else {
                 const erc20Standard = new ERC20Standard(currency, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
                 const decimals = await erc20Standard.decimals()
                 const formattedAmount = ethers.formatUnits(noteObj.zkData.publicSignals[4], decimals)
 
-                const txSig = await solanaSDK.sendSPLToken(MIX_CONFIG.ETH2SOL_CURRENCY_MAP[currency], receiver, Number(formattedAmount))
-
-                const tx = await aintiVirusMixer.setNullifierForSolWithdrawal(nullifierHash.toString())
-                await tx.wait()
-
-                return {
-                    data: {
-                        txSig
+                try {
+                    const txSig = await solanaSDK.sendSPLToken(MIX_CONFIG.ETH2SOL_CURRENCY_MAP[currency], receiver, Number(formattedAmount))
+                    
+                    const tx = await aintiVirusMixer.setNullifierForSolWithdrawal(nullifierHash.toString())
+                    await tx.wait()
+    
+                    return {
+                        data: {
+                            txSig
+                        }
                     }
+                }
+                catch(error) {
+                    const tx = await aintiVirusMixer.revertNullifierForSolWithdrawal(nullifierHash.toString())
+                    await tx.wait()
+                    console.log("Nullifier reverted")
+
+                    throw Boom.internal('Error: Failed to send ETH to receiver')
                 }
             }
         }

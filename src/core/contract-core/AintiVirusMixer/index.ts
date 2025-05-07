@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { ContractTransaction, ethers } from "ethers";
 import { AintiVirusMixer as IAintiVirusMixer } from "../typechain-types"; // Generated typechain interface
 import { MIXER_ABI } from "../../../constant/abi/Mixer";
 
@@ -86,8 +86,8 @@ export default class AintiVirusMixer {
      */
     async isSolNullifierUsed(nullifierHash: string): Promise<boolean> {
         try {
-            const isUsed = await this.contract.solUsedNullifiers(nullifierHash);
-            return isUsed;
+            const status = await this.contract.solUsedNullifiers(nullifierHash);
+            return status == BigInt(0);
         } catch (error) {
             throw error;
         }
@@ -189,10 +189,10 @@ export default class AintiVirusMixer {
         proofB: [[ethers.BigNumberish, ethers.BigNumberish], [ethers.BigNumberish, ethers.BigNumberish]],
         proofC: [ethers.BigNumberish, ethers.BigNumberish],
         pubSignals: [ethers.BigNumberish, ethers.BigNumberish, ethers.BigNumberish, ethers.BigNumberish, ethers.BigNumberish]
-    ): Promise<boolean> {
+    ): Promise<ethers.ContractTransactionResponse> {
         try {
-            const verified = await this.contract.verifySolWithdrawal(proofA, proofB, proofC, pubSignals);
-            return verified;
+            const tx = await this.contract.verifySolWithdrawal(proofA, proofB, proofC, pubSignals);
+            return tx;
         } catch (error) {
             throw error;
         }
@@ -208,6 +208,23 @@ export default class AintiVirusMixer {
         try {
             const bytes32Hash = ethers.zeroPadValue(ethers.toBeHex(nullifierHash), 32)
             const tx = await this.contract.setNullifierForSolWithdrawal(bytes32Hash);
+            return tx;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Sets a nullifier for Solana withdrawal (operator only)
+     * @param nullifierHash Nullifier hash
+     * @returns Transaction response
+     */
+    async revertNullifierForSolWithdrawal(
+        nullifierHash: string
+    ): Promise<ethers.ContractTransactionResponse> {
+        try {
+            const bytes32Hash = ethers.zeroPadValue(ethers.toBeHex(nullifierHash), 32)
+            const tx = await this.contract.revertNullifierForSolWithdrawal(bytes32Hash);
             return tx;
         } catch (error) {
             throw error;

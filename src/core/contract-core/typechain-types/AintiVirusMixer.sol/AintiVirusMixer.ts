@@ -36,6 +36,7 @@ export interface AintiVirusMixerInterface extends Interface {
       | "grantRole"
       | "hasRole"
       | "renounceRole"
+      | "revertNullifierForSolWithdrawal"
       | "revokeRole"
       | "setNullifierForSolWithdrawal"
       | "solKnownCommitments"
@@ -94,6 +95,10 @@ export interface AintiVirusMixerInterface extends Interface {
   encodeFunctionData(
     functionFragment: "renounceRole",
     values: [BytesLike, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "revertNullifierForSolWithdrawal",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "revokeRole",
@@ -164,6 +169,10 @@ export interface AintiVirusMixerInterface extends Interface {
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceRole",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "revertNullifierForSolWithdrawal",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
@@ -360,6 +369,12 @@ export interface AintiVirusMixer extends BaseContract {
     "nonpayable"
   >;
 
+  revertNullifierForSolWithdrawal: TypedContractMethod<
+    [_nullifierHash: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
   revokeRole: TypedContractMethod<
     [role: BytesLike, account: AddressLike],
     [void],
@@ -378,7 +393,7 @@ export interface AintiVirusMixer extends BaseContract {
     "view"
   >;
 
-  solUsedNullifiers: TypedContractMethod<[arg0: BytesLike], [boolean], "view">;
+  solUsedNullifiers: TypedContractMethod<[arg0: BytesLike], [bigint], "view">;
 
   supportsInterface: TypedContractMethod<
     [interfaceId: BytesLike],
@@ -402,7 +417,7 @@ export interface AintiVirusMixer extends BaseContract {
       ]
     ],
     [boolean],
-    "view"
+    "nonpayable"
   >;
 
   withdraw: TypedContractMethod<
@@ -473,6 +488,9 @@ export interface AintiVirusMixer extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "revertNullifierForSolWithdrawal"
+  ): TypedContractMethod<[_nullifierHash: BytesLike], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "revokeRole"
   ): TypedContractMethod<
     [role: BytesLike, account: AddressLike],
@@ -487,7 +505,7 @@ export interface AintiVirusMixer extends BaseContract {
   ): TypedContractMethod<[arg0: BigNumberish], [boolean], "view">;
   getFunction(
     nameOrSignature: "solUsedNullifiers"
-  ): TypedContractMethod<[arg0: BytesLike], [boolean], "view">;
+  ): TypedContractMethod<[arg0: BytesLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "supportsInterface"
   ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
@@ -510,7 +528,7 @@ export interface AintiVirusMixer extends BaseContract {
       ]
     ],
     [boolean],
-    "view"
+    "nonpayable"
   >;
   getFunction(
     nameOrSignature: "withdraw"

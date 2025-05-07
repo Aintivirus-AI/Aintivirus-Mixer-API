@@ -315,6 +315,19 @@ export const MIXER_ABI = [
         "inputs": [
             {
                 "internalType": "bytes32",
+                "name": "_nullifierHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "revertNullifierForSolWithdrawal",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
                 "name": "role",
                 "type": "bytes32"
             },
@@ -372,9 +385,9 @@ export const MIXER_ABI = [
         "name": "solUsedNullifiers",
         "outputs": [
             {
-                "internalType": "bool",
+                "internalType": "enum AintiVirusMixer.SolNullifierStatus",
                 "name": "",
-                "type": "bool"
+                "type": "uint8"
             }
         ],
         "stateMutability": "view",
@@ -443,7 +456,7 @@ export const MIXER_ABI = [
                 "type": "bool"
             }
         ],
-        "stateMutability": "view",
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
