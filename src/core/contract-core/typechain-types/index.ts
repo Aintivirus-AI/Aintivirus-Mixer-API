@@ -3,6 +3,8 @@
 /* eslint-disable */
 import type * as aintiVirusMixerSol from "./AintiVirusMixer.sol";
 export type { aintiVirusMixerSol };
+import type * as merkleTreeWithHistorySol from "./MerkleTreeWithHistory.sol";
+export type { merkleTreeWithHistorySol };
 import type * as tokenSol from "./Token.sol";
 export type { tokenSol };
 export * as factories from "./factories";
@@ -28,3 +30,5 @@ export type { IERC20Metadata } from "./Token.sol/IERC20Metadata";
 export { IERC20Metadata__factory } from "./factories/Token.sol/IERC20Metadata__factory";
 export type { Ownable } from "./Token.sol/Ownable";
 export { Ownable__factory } from "./factories/Token.sol/Ownable__factory";
+export type { MerkleTreeWithHistory } from "./AintiVirusMixer.sol/MerkleTreeWithHistory";
+export { MerkleTreeWithHistory__factory } from "./factories/AintiVirusMixer.sol/MerkleTreeWithHistory__factory";

@@ -17,11 +17,12 @@ import { CryptoUtil } from "../../utils"
 import SessionStore, { Session } from "../../store/db/SessionStore"
 import ZkSnark from "../../zksnark/ZkSnark"
 import { CoinMarketcapAPI, SolanaSDK } from "../../sdk"
-import { AintiVirusMixer, ERC20Standard } from "../../core/contract-core"
+import { AintiVirusMixer, ERC20Standard, MerkleTreeReconstructor, MerkleTreeVerifier } from "../../core/contract-core"
 // ** import local constants
 import { MIX_CONFIG } from "../../constant"
 import ENV from "../../constant/env"
 import { MIXER_ABI } from "../../constant/abi/Mixer"
+import { TreeType } from '../../core/contract-core/MerkleTreeReConstructor'
 
 class MixerController {
     static depositETH = async (payload: RequestPayload): Promise<ResponsePayload> => {
@@ -60,10 +61,21 @@ class MixerController {
             // Generate zksnark data
             const { secret, nullifier } = ZkSnark.generateSecretAndNullifier()
             const zkPreProofData = await ZkSnark.createPreProof(secret, nullifier, currency, amountInWei)
-            const commitment = ZkSnark.computeCommitment(secret, currency, amountInWei)
+            const commitment = ZkSnark.computeCommitment(secret, nullifier, currency, amountInWei)
+
 
             if (isNative) {
-                const depositTransaction = await aintiVirusMixer.populateTransactionDeposit(currency, amountInWei, commitment.toString())
+                const depositTransaction = await aintiVirusMixer.populateTransactionDeposit(
+                    currency,
+                    amountInWei.toString(),
+                    CryptoUtil.bigIntToBytes32(commitment),
+                    {
+                        pA: zkPreProofData.calldata.a,
+                        pB: zkPreProofData.calldata.b,
+                        pC: zkPreProofData.calldata.c,
+                        pubSignals: zkPreProofData.publicSignals.map(signal => signal.toString()) as [string, string, string, string, string]
+                    }
+                )
 
                 // Sanitize BigInts in transaction object
                 const safeTransaction = JSON.parse(
@@ -75,17 +87,42 @@ class MixerController {
                 transactions.push(safeTransaction)
             }
             else {
-                const approveTransaction = await erc20Standard.populateTransactionApprove(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, amountInWei)
-                const depositTransaction = await aintiVirusMixer.populateTransactionDeposit(currency, amountInWei, commitment.toString())
+                const approveTransaction = await erc20Standard.populateTransactionApprove(
+                    MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS,
+                    amountInWei.toString()
+                )
+                const depositTransaction = await aintiVirusMixer.populateTransactionDeposit(
+                    currency,
+                    amountInWei.toString(),
+                    CryptoUtil.bigIntToBytes32(commitment),
+                    {
+                        pA: zkPreProofData.calldata.a,
+                        pB: zkPreProofData.calldata.b,
+                        pC: zkPreProofData.calldata.c,
+                        pubSignals: zkPreProofData.publicSignals.map(signal => signal.toString()) as [string, string, string, string, string]
+                    }
+                )
 
-                transactions.push(approveTransaction)
-                transactions.push(depositTransaction)
+                const safeApproveTransaction = JSON.parse(
+                    JSON.stringify(approveTransaction, (_key, value) =>
+                        typeof value === 'bigint' ? value.toString() : value
+                    )
+                )
+
+                const safeDepositTransaction = JSON.parse(
+                    JSON.stringify(depositTransaction, (_key, value) =>
+                        typeof value === 'bigint' ? value.toString() : value
+                    )
+                )
+
+                transactions.push(safeApproveTransaction)
+                transactions.push(safeDepositTransaction)
             }
-            
+
             // Store session data
             const sessionStore = new SessionStore('./src/store/db/session_store.db')
             await sessionStore.initialize()
-            
+
             await sessionStore.create({
                 amount: Number(amountInWei),
                 currency,
@@ -100,7 +137,7 @@ class MixerController {
             })
 
             await sessionStore.close()
-            
+
             return {
                 data: {
                     sessionId,
@@ -161,7 +198,12 @@ class MixerController {
             // Generate zksnark data
             const { secret, nullifier } = ZkSnark.generateSecretAndNullifier()
             const zkPreProofData = await ZkSnark.createPreProof(secret, nullifier, MIX_CONFIG.SOL2ETH_CURRENCY_MAP[currency], etherAmount)
-            const commitment = ZkSnark.computeCommitment(secret, MIX_CONFIG.SOL2ETH_CURRENCY_MAP[currency], etherAmount)
+            const commitment = ZkSnark.computeCommitment(
+                secret,
+                nullifier,
+                MIX_CONFIG.SOL2ETH_CURRENCY_MAP[currency],
+                etherAmount
+            )
 
             // Store session data
             const sessionStore = new SessionStore('./src/store/db/session_store.db')
@@ -411,7 +453,7 @@ class MixerController {
 
             // Add commitment on Mixer smart contract on Ethereum
             const aintiVirusMixer = new AintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
-            const tx = await aintiVirusMixer.addCommitmentForEthWithdrawal(session.commitment)
+            const tx = await aintiVirusMixer.addCommitmentForEthWithdrawal(CryptoUtil.bigIntToBytes32(BigInt(session.commitment)))
             await tx.wait()
 
             // Clear Zk secret note in session
@@ -441,25 +483,73 @@ class MixerController {
 
             const solanaSDK = new SolanaSDK(ENV.SOL_POOL_PRIVKEY, ENV.SOLANA_RPC_URL)
             const aintiVirusMixer = new AintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+            const merkleReConstructor = new MerkleTreeReconstructor(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL)
+
             const nullifierHash = ZkSnark.computeNullifierHash(BigInt(noteObj.nullifier))
             const { currency, amount } = ZkSnark.recoverPreProofData(noteObj.zkData)
 
-            
+            const commitment = ZkSnark.computeCommitment(
+                BigInt(noteObj.secret),
+                BigInt(noteObj.nullifier),
+                BigInt(currency),
+                amount
+            )
+
+            const leafIndex = await aintiVirusMixer.getSolLeafIndexByCommitment(CryptoUtil.bigIntToBytes32(commitment))
+
+            if (leafIndex === null) {
+                throw Boom.internal('Error: Invalid commitment. Leaf not found')
+            }
+
+            const { root, path } = await merkleReConstructor.getLastRootAndMerklePath(TreeType.SOL, leafIndex)
+
+
             const withdrawalProof = await ZkSnark.createWithdrawalProof(
                 BigInt(noteObj.secret),
                 BigInt(noteObj.nullifier),
+                path.pathElements,
+                path.pathIndices,
+                leafIndex,
                 nullifierHash,
-                receiver,
+                root,
                 currency,
-                BigInt(amount),
+                amount,
+                receiver,
                 true
             )
 
+            console.log(BigInt(noteObj.secret),
+                BigInt(noteObj.nullifier),
+                path.pathElements,
+                path.pathIndices,
+                leafIndex,
+                nullifierHash,
+                root,
+                currency,
+                amount,
+                receiver)
+
+            // console.log(BigInt(root))
+            // console.log(withdrawalProof.publicSignals)
+
+            const merkleVerifier = new MerkleTreeVerifier(20)
+            const merkleVerification = await merkleVerifier.verifyMerkleProof(CryptoUtil.bigIntToBytes32(commitment), BigInt(root).toString(), path)
+
+            // Pre check merkle proof before zk proof verification on smart contract
+            if (!merkleVerification) {
+                throw Boom.internal('Error: Invalid Merkle proof')
+            }
+
+            console.log({ merkleVerification })
+
             const validationTx = await aintiVirusMixer.verifySolWithdrawal(
-                withdrawalProof.calldata.a,
-                withdrawalProof.calldata.b,
-                withdrawalProof.calldata.c,
-                withdrawalProof.publicSignals
+                root,
+                {
+                    pA: withdrawalProof.calldata.a,
+                    pB: withdrawalProof.calldata.b,
+                    pC: withdrawalProof.calldata.c,
+                    pubSignals: withdrawalProof.publicSignals.map(signal => signal.toString()) as [string, string, string, string, string, string, string, string, string, string]
+                }
             )
 
             await validationTx.wait()
@@ -469,10 +559,10 @@ class MixerController {
                 const solAmount = await CoinMarketcapAPI.getQuoteBySymbol('ETH', 'sol', formattedAmount)
                 try {
                     const txSig = await solanaSDK.sendSol(receiver, solAmount)
-    
-                    const tx = await aintiVirusMixer.setNullifierForSolWithdrawal(nullifierHash.toString())
+
+                    const tx = await aintiVirusMixer.setNullifierForSolWithdrawal(CryptoUtil.bigIntToBytes32(nullifierHash))
                     await tx.wait()
-                    
+
                     return {
                         data: {
                             txSig
@@ -480,7 +570,7 @@ class MixerController {
                     }
                 }
                 catch (error) {
-                    const tx = await aintiVirusMixer.revertNullifierForSolWithdrawal(nullifierHash.toString())
+                    const tx = await aintiVirusMixer.revertNullifierForSolWithdrawal(CryptoUtil.bigIntToBytes32(nullifierHash))
                     await tx.wait()
                     console.log("Nullifier reverted")
 
@@ -495,18 +585,18 @@ class MixerController {
 
                 try {
                     const txSig = await solanaSDK.sendSPLToken(MIX_CONFIG.ETH2SOL_CURRENCY_MAP[currency], receiver, Number(formattedAmount))
-                    
-                    const tx = await aintiVirusMixer.setNullifierForSolWithdrawal(nullifierHash.toString())
+
+                    const tx = await aintiVirusMixer.setNullifierForSolWithdrawal(CryptoUtil.bigIntToBytes32(nullifierHash))
                     await tx.wait()
-    
+
                     return {
                         data: {
                             txSig
                         }
                     }
                 }
-                catch(error) {
-                    const tx = await aintiVirusMixer.revertNullifierForSolWithdrawal(nullifierHash.toString())
+                catch (error) {
+                    const tx = await aintiVirusMixer.revertNullifierForSolWithdrawal(CryptoUtil.bigIntToBytes32(nullifierHash))
                     await tx.wait()
                     console.log("Nullifier reverted")
 
@@ -519,7 +609,6 @@ class MixerController {
             throw Boom.internal((error as Error).message, { originalError: error });
         }
     }
-
     static withdrawETH = async (payload: RequestPayload): Promise<ResponsePayload> => {
         try {
             const { note, receiver } = payload
@@ -530,23 +619,54 @@ class MixerController {
             )
 
             const aintiVirusMixer = new AintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+            const merkleReConstructor = new MerkleTreeReconstructor(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL)
+
             const nullifierHash = ZkSnark.computeNullifierHash(BigInt(noteObj.nullifier))
             const { currency, amount } = ZkSnark.recoverPreProofData(noteObj.zkData)
+
+            const commitment = ZkSnark.computeCommitment(
+                BigInt(noteObj.secret),
+                BigInt(noteObj.nullifier),
+                BigInt(currency),
+                amount
+            )
+
+            const leafIndex = await aintiVirusMixer.getEthLeafIndexByCommitment(CryptoUtil.bigIntToBytes32(commitment))
+            const { root, path } = await merkleReConstructor.getLastRootAndMerklePath(TreeType.ETH, leafIndex)
+
+            if (leafIndex === null) {
+                throw Boom.internal('Error: Invalid commitment')
+            }
+
+            const merkleVerifier = new MerkleTreeVerifier(20)
+            const merkleVerification = await merkleVerifier.verifyMerkleProof(CryptoUtil.bigIntToBytes32(commitment), BigInt(root).toString(), path)
+
+            // Pre check merkle proof before zk proof verification on smart contract
+            if (!merkleVerification) {
+                throw Boom.internal('Error: Invalid Merkle proof')
+            }
 
             const withdrawalProof = await ZkSnark.createWithdrawalProof(
                 BigInt(noteObj.secret),
                 BigInt(noteObj.nullifier),
+                path.pathElements,
+                path.pathIndices,
+                leafIndex,
                 nullifierHash,
-                receiver,
+                root,
                 currency,
-                BigInt(amount)
+                amount,
+                receiver
             )
 
             const transaction = await aintiVirusMixer.populateTransactionWithdraw(
-                withdrawalProof.calldata.a,
-                withdrawalProof.calldata.b,
-                withdrawalProof.calldata.c,
-                withdrawalProof.publicSignals
+                root,
+                {
+                    pA: withdrawalProof.calldata.a,
+                    pB: withdrawalProof.calldata.b,
+                    pC: withdrawalProof.calldata.c,
+                    pubSignals: withdrawalProof.publicSignals.map(signal => signal.toString()) as [string, string, string, string, string, string, string, string, string, string]
+                }
             )
 
             return {

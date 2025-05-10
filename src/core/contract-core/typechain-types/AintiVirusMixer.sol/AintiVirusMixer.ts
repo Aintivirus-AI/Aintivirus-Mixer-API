@@ -23,21 +23,86 @@ import type {
   TypedContractMethod,
 } from "../common";
 
+export declare namespace AintiVirusMixer {
+  export type DepositProofStruct = {
+    pA: [BigNumberish, BigNumberish];
+    pB: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]];
+    pC: [BigNumberish, BigNumberish];
+    pubSignals: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish
+    ];
+  };
+
+  export type DepositProofStructOutput = [
+    pA: [bigint, bigint],
+    pB: [[bigint, bigint], [bigint, bigint]],
+    pC: [bigint, bigint],
+    pubSignals: [bigint, bigint, bigint, bigint, bigint]
+  ] & {
+    pA: [bigint, bigint];
+    pB: [[bigint, bigint], [bigint, bigint]];
+    pC: [bigint, bigint];
+    pubSignals: [bigint, bigint, bigint, bigint, bigint];
+  };
+
+  export type WithdrawalProofStruct = {
+    pA: [BigNumberish, BigNumberish];
+    pB: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]];
+    pC: [BigNumberish, BigNumberish];
+    pubSignals: BigNumberish[];
+  };
+
+  export type WithdrawalProofStructOutput = [
+    pA: [bigint, bigint],
+    pB: [[bigint, bigint], [bigint, bigint]],
+    pC: [bigint, bigint],
+    pubSignals: bigint[]
+  ] & {
+    pA: [bigint, bigint];
+    pB: [[bigint, bigint], [bigint, bigint]];
+    pC: [bigint, bigint];
+    pubSignals: bigint[];
+  };
+}
+
 export interface AintiVirusMixerInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "DEFAULT_ADMIN_ROLE"
+      | "FIELD_SIZE"
       | "OPERATOR_ROLE"
+      | "ROOT_HISTORY_SIZE"
+      | "TREE_DEPTH"
+      | "ZERO_VALUE"
       | "addCommitmentForEthWithdrawal"
+      | "currentRootIndexETH"
+      | "currentRootIndexSOL"
       | "deposit"
+      | "depositVerifier"
       | "ethKnownCommitments"
       | "ethUsedNullifiers"
+      | "filledSubtreesETH"
+      | "filledSubtreesSOL"
+      | "getLastETHRoot"
+      | "getLastSOLRoot"
       | "getRoleAdmin"
       | "grantRole"
       | "hasRole"
+      | "hasher"
+      | "isKnownETHRoot"
+      | "isKnownSOLRoot"
+      | "levels"
+      | "nextIndexETH"
+      | "nextIndexSOL"
       | "renounceRole"
       | "revertNullifierForSolWithdrawal"
       | "revokeRole"
+      | "rootsETH"
+      | "rootsSOL"
       | "setNullifierForSolWithdrawal"
       | "solKnownCommitments"
       | "solUsedNullifiers"
@@ -51,6 +116,8 @@ export interface AintiVirusMixerInterface extends Interface {
     nameOrSignatureOrTopic:
       | "CommitmentAddedForEthWithdrawal"
       | "DepositForSolWithdrawal"
+      | "LeafInsertedETH"
+      | "LeafInsertedSOL"
       | "RoleAdminChanged"
       | "RoleGranted"
       | "RoleRevoked"
@@ -61,24 +128,73 @@ export interface AintiVirusMixerInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "FIELD_SIZE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "OPERATOR_ROLE",
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "ROOT_HISTORY_SIZE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "TREE_DEPTH",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "ZERO_VALUE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "addCommitmentForEthWithdrawal",
-    values: [BigNumberish]
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "currentRootIndexETH",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "currentRootIndexSOL",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "deposit",
-    values: [AddressLike, BigNumberish, BigNumberish]
+    values: [
+      AddressLike,
+      BigNumberish,
+      BytesLike,
+      AintiVirusMixer.DepositProofStruct
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "depositVerifier",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "ethKnownCommitments",
-    values: [BigNumberish]
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "ethUsedNullifiers",
     values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "filledSubtreesETH",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "filledSubtreesSOL",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getLastETHRoot",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getLastSOLRoot",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getRoleAdmin",
@@ -91,6 +207,24 @@ export interface AintiVirusMixerInterface extends Interface {
   encodeFunctionData(
     functionFragment: "hasRole",
     values: [BytesLike, AddressLike]
+  ): string;
+  encodeFunctionData(functionFragment: "hasher", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "isKnownETHRoot",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isKnownSOLRoot",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(functionFragment: "levels", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "nextIndexETH",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "nextIndexSOL",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "renounceRole",
@@ -105,12 +239,20 @@ export interface AintiVirusMixerInterface extends Interface {
     values: [BytesLike, AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "rootsETH",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "rootsSOL",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setNullifierForSolWithdrawal",
     values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "solKnownCommitments",
-    values: [BigNumberish]
+    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "solUsedNullifiers",
@@ -123,36 +265,45 @@ export interface AintiVirusMixerInterface extends Interface {
   encodeFunctionData(functionFragment: "verifier", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "verifySolWithdrawal",
-    values: [
-      [BigNumberish, BigNumberish],
-      [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
-      [BigNumberish, BigNumberish],
-      [BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish]
-    ]
+    values: [BytesLike, AintiVirusMixer.WithdrawalProofStruct]
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [
-      [BigNumberish, BigNumberish],
-      [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
-      [BigNumberish, BigNumberish],
-      [BigNumberish, BigNumberish, BigNumberish, BigNumberish, BigNumberish]
-    ]
+    values: [BytesLike, AintiVirusMixer.WithdrawalProofStruct]
   ): string;
 
   decodeFunctionResult(
     functionFragment: "DEFAULT_ADMIN_ROLE",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "FIELD_SIZE", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "OPERATOR_ROLE",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "ROOT_HISTORY_SIZE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "TREE_DEPTH", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "ZERO_VALUE", data: BytesLike): Result;
+  decodeFunctionResult(
     functionFragment: "addCommitmentForEthWithdrawal",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "currentRootIndexETH",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "currentRootIndexSOL",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "depositVerifier",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "ethKnownCommitments",
     data: BytesLike
@@ -162,11 +313,45 @@ export interface AintiVirusMixerInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "filledSubtreesETH",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "filledSubtreesSOL",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getLastETHRoot",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getLastSOLRoot",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getRoleAdmin",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "hasher", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "isKnownETHRoot",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isKnownSOLRoot",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "levels", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "nextIndexETH",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "nextIndexSOL",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "renounceRole",
     data: BytesLike
@@ -176,6 +361,8 @@ export interface AintiVirusMixerInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "rootsETH", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "rootsSOL", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setNullifierForSolWithdrawal",
     data: BytesLike
@@ -201,10 +388,20 @@ export interface AintiVirusMixerInterface extends Interface {
 }
 
 export namespace CommitmentAddedForEthWithdrawalEvent {
-  export type InputTuple = [commitment: BigNumberish];
-  export type OutputTuple = [commitment: bigint];
+  export type InputTuple = [
+    commitment: BytesLike,
+    leafIndex: BigNumberish,
+    timestamp: BigNumberish
+  ];
+  export type OutputTuple = [
+    commitment: string,
+    leafIndex: bigint,
+    timestamp: bigint
+  ];
   export interface OutputObject {
-    commitment: bigint;
+    commitment: string;
+    leafIndex: bigint;
+    timestamp: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -213,10 +410,56 @@ export namespace CommitmentAddedForEthWithdrawalEvent {
 }
 
 export namespace DepositForSolWithdrawalEvent {
-  export type InputTuple = [commitment: BigNumberish];
-  export type OutputTuple = [commitment: bigint];
+  export type InputTuple = [
+    commitment: BytesLike,
+    leafIndex: BigNumberish,
+    timestamp: BigNumberish
+  ];
+  export type OutputTuple = [
+    commitment: string,
+    leafIndex: bigint,
+    timestamp: bigint
+  ];
   export interface OutputObject {
-    commitment: bigint;
+    commitment: string;
+    leafIndex: bigint;
+    timestamp: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace LeafInsertedETHEvent {
+  export type InputTuple = [
+    leaf: BytesLike,
+    index: BigNumberish,
+    root: BytesLike
+  ];
+  export type OutputTuple = [leaf: string, index: bigint, root: string];
+  export interface OutputObject {
+    leaf: string;
+    index: bigint;
+    root: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace LeafInsertedSOLEvent {
+  export type InputTuple = [
+    leaf: BytesLike,
+    index: BigNumberish,
+    root: BytesLike
+  ];
+  export type OutputTuple = [leaf: string, index: bigint, root: string];
+  export interface OutputObject {
+    leaf: string;
+    index: bigint;
+    root: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -327,27 +570,62 @@ export interface AintiVirusMixer extends BaseContract {
 
   DEFAULT_ADMIN_ROLE: TypedContractMethod<[], [string], "view">;
 
+  FIELD_SIZE: TypedContractMethod<[], [bigint], "view">;
+
   OPERATOR_ROLE: TypedContractMethod<[], [string], "view">;
 
+  ROOT_HISTORY_SIZE: TypedContractMethod<[], [bigint], "view">;
+
+  TREE_DEPTH: TypedContractMethod<[], [bigint], "view">;
+
+  ZERO_VALUE: TypedContractMethod<[], [bigint], "view">;
+
   addCommitmentForEthWithdrawal: TypedContractMethod<
-    [_commitment: BigNumberish],
+    [_commitment: BytesLike],
     [void],
     "nonpayable"
   >;
 
+  currentRootIndexETH: TypedContractMethod<[], [bigint], "view">;
+
+  currentRootIndexSOL: TypedContractMethod<[], [bigint], "view">;
+
   deposit: TypedContractMethod<
-    [_currency: AddressLike, _amount: BigNumberish, _commitment: BigNumberish],
+    [
+      _currency: AddressLike,
+      _amount: BigNumberish,
+      _commitment: BytesLike,
+      _proof: AintiVirusMixer.DepositProofStruct
+    ],
     [void],
     "payable"
   >;
 
+  depositVerifier: TypedContractMethod<[], [string], "view">;
+
   ethKnownCommitments: TypedContractMethod<
-    [arg0: BigNumberish],
+    [arg0: BytesLike],
     [boolean],
     "view"
   >;
 
-  ethUsedNullifiers: TypedContractMethod<[arg0: BytesLike], [boolean], "view">;
+  ethUsedNullifiers: TypedContractMethod<[arg0: BytesLike], [bigint], "view">;
+
+  filledSubtreesETH: TypedContractMethod<
+    [arg0: BigNumberish],
+    [string],
+    "view"
+  >;
+
+  filledSubtreesSOL: TypedContractMethod<
+    [arg0: BigNumberish],
+    [string],
+    "view"
+  >;
+
+  getLastETHRoot: TypedContractMethod<[], [string], "view">;
+
+  getLastSOLRoot: TypedContractMethod<[], [string], "view">;
 
   getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], "view">;
 
@@ -362,6 +640,18 @@ export interface AintiVirusMixer extends BaseContract {
     [boolean],
     "view"
   >;
+
+  hasher: TypedContractMethod<[], [string], "view">;
+
+  isKnownETHRoot: TypedContractMethod<[_root: BytesLike], [boolean], "view">;
+
+  isKnownSOLRoot: TypedContractMethod<[_root: BytesLike], [boolean], "view">;
+
+  levels: TypedContractMethod<[], [bigint], "view">;
+
+  nextIndexETH: TypedContractMethod<[], [bigint], "view">;
+
+  nextIndexSOL: TypedContractMethod<[], [bigint], "view">;
 
   renounceRole: TypedContractMethod<
     [role: BytesLike, callerConfirmation: AddressLike],
@@ -381,6 +671,10 @@ export interface AintiVirusMixer extends BaseContract {
     "nonpayable"
   >;
 
+  rootsETH: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+
+  rootsSOL: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+
   setNullifierForSolWithdrawal: TypedContractMethod<
     [_nullifierHash: BytesLike],
     [void],
@@ -388,7 +682,7 @@ export interface AintiVirusMixer extends BaseContract {
   >;
 
   solKnownCommitments: TypedContractMethod<
-    [arg0: BigNumberish],
+    [arg0: BytesLike],
     [boolean],
     "view"
   >;
@@ -404,35 +698,13 @@ export interface AintiVirusMixer extends BaseContract {
   verifier: TypedContractMethod<[], [string], "view">;
 
   verifySolWithdrawal: TypedContractMethod<
-    [
-      _pA: [BigNumberish, BigNumberish],
-      _pB: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
-      _pC: [BigNumberish, BigNumberish],
-      _pubSignals: [
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish
-      ]
-    ],
+    [_root: BytesLike, _proof: AintiVirusMixer.WithdrawalProofStruct],
     [boolean],
     "nonpayable"
   >;
 
   withdraw: TypedContractMethod<
-    [
-      _pA: [BigNumberish, BigNumberish],
-      _pB: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
-      _pC: [BigNumberish, BigNumberish],
-      _pubSignals: [
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish
-      ]
-    ],
+    [_root: BytesLike, _proof: AintiVirusMixer.WithdrawalProofStruct],
     [void],
     "nonpayable"
   >;
@@ -445,24 +717,62 @@ export interface AintiVirusMixer extends BaseContract {
     nameOrSignature: "DEFAULT_ADMIN_ROLE"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "FIELD_SIZE"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "OPERATOR_ROLE"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "ROOT_HISTORY_SIZE"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "TREE_DEPTH"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "ZERO_VALUE"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "addCommitmentForEthWithdrawal"
-  ): TypedContractMethod<[_commitment: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<[_commitment: BytesLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "currentRootIndexETH"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "currentRootIndexSOL"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "deposit"
   ): TypedContractMethod<
-    [_currency: AddressLike, _amount: BigNumberish, _commitment: BigNumberish],
+    [
+      _currency: AddressLike,
+      _amount: BigNumberish,
+      _commitment: BytesLike,
+      _proof: AintiVirusMixer.DepositProofStruct
+    ],
     [void],
     "payable"
   >;
   getFunction(
+    nameOrSignature: "depositVerifier"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "ethKnownCommitments"
-  ): TypedContractMethod<[arg0: BigNumberish], [boolean], "view">;
+  ): TypedContractMethod<[arg0: BytesLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "ethUsedNullifiers"
-  ): TypedContractMethod<[arg0: BytesLike], [boolean], "view">;
+  ): TypedContractMethod<[arg0: BytesLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "filledSubtreesETH"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "filledSubtreesSOL"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "getLastETHRoot"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "getLastSOLRoot"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "getRoleAdmin"
   ): TypedContractMethod<[role: BytesLike], [string], "view">;
@@ -481,6 +791,24 @@ export interface AintiVirusMixer extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "hasher"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "isKnownETHRoot"
+  ): TypedContractMethod<[_root: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "isKnownSOLRoot"
+  ): TypedContractMethod<[_root: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "levels"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "nextIndexETH"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "nextIndexSOL"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "renounceRole"
   ): TypedContractMethod<
     [role: BytesLike, callerConfirmation: AddressLike],
@@ -498,11 +826,17 @@ export interface AintiVirusMixer extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "rootsETH"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "rootsSOL"
+  ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  getFunction(
     nameOrSignature: "setNullifierForSolWithdrawal"
   ): TypedContractMethod<[_nullifierHash: BytesLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "solKnownCommitments"
-  ): TypedContractMethod<[arg0: BigNumberish], [boolean], "view">;
+  ): TypedContractMethod<[arg0: BytesLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "solUsedNullifiers"
   ): TypedContractMethod<[arg0: BytesLike], [bigint], "view">;
@@ -515,36 +849,14 @@ export interface AintiVirusMixer extends BaseContract {
   getFunction(
     nameOrSignature: "verifySolWithdrawal"
   ): TypedContractMethod<
-    [
-      _pA: [BigNumberish, BigNumberish],
-      _pB: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
-      _pC: [BigNumberish, BigNumberish],
-      _pubSignals: [
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish
-      ]
-    ],
+    [_root: BytesLike, _proof: AintiVirusMixer.WithdrawalProofStruct],
     [boolean],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "withdraw"
   ): TypedContractMethod<
-    [
-      _pA: [BigNumberish, BigNumberish],
-      _pB: [[BigNumberish, BigNumberish], [BigNumberish, BigNumberish]],
-      _pC: [BigNumberish, BigNumberish],
-      _pubSignals: [
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish,
-        BigNumberish
-      ]
-    ],
+    [_root: BytesLike, _proof: AintiVirusMixer.WithdrawalProofStruct],
     [void],
     "nonpayable"
   >;
@@ -562,6 +874,20 @@ export interface AintiVirusMixer extends BaseContract {
     DepositForSolWithdrawalEvent.InputTuple,
     DepositForSolWithdrawalEvent.OutputTuple,
     DepositForSolWithdrawalEvent.OutputObject
+  >;
+  getEvent(
+    key: "LeafInsertedETH"
+  ): TypedContractEvent<
+    LeafInsertedETHEvent.InputTuple,
+    LeafInsertedETHEvent.OutputTuple,
+    LeafInsertedETHEvent.OutputObject
+  >;
+  getEvent(
+    key: "LeafInsertedSOL"
+  ): TypedContractEvent<
+    LeafInsertedSOLEvent.InputTuple,
+    LeafInsertedSOLEvent.OutputTuple,
+    LeafInsertedSOLEvent.OutputObject
   >;
   getEvent(
     key: "RoleAdminChanged"
@@ -586,7 +912,7 @@ export interface AintiVirusMixer extends BaseContract {
   >;
 
   filters: {
-    "CommitmentAddedForEthWithdrawal(uint256)": TypedContractEvent<
+    "CommitmentAddedForEthWithdrawal(bytes32,uint32,uint256)": TypedContractEvent<
       CommitmentAddedForEthWithdrawalEvent.InputTuple,
       CommitmentAddedForEthWithdrawalEvent.OutputTuple,
       CommitmentAddedForEthWithdrawalEvent.OutputObject
@@ -597,7 +923,7 @@ export interface AintiVirusMixer extends BaseContract {
       CommitmentAddedForEthWithdrawalEvent.OutputObject
     >;
 
-    "DepositForSolWithdrawal(uint256)": TypedContractEvent<
+    "DepositForSolWithdrawal(bytes32,uint32,uint256)": TypedContractEvent<
       DepositForSolWithdrawalEvent.InputTuple,
       DepositForSolWithdrawalEvent.OutputTuple,
       DepositForSolWithdrawalEvent.OutputObject
@@ -606,6 +932,28 @@ export interface AintiVirusMixer extends BaseContract {
       DepositForSolWithdrawalEvent.InputTuple,
       DepositForSolWithdrawalEvent.OutputTuple,
       DepositForSolWithdrawalEvent.OutputObject
+    >;
+
+    "LeafInsertedETH(bytes32,uint32,bytes32)": TypedContractEvent<
+      LeafInsertedETHEvent.InputTuple,
+      LeafInsertedETHEvent.OutputTuple,
+      LeafInsertedETHEvent.OutputObject
+    >;
+    LeafInsertedETH: TypedContractEvent<
+      LeafInsertedETHEvent.InputTuple,
+      LeafInsertedETHEvent.OutputTuple,
+      LeafInsertedETHEvent.OutputObject
+    >;
+
+    "LeafInsertedSOL(bytes32,uint32,bytes32)": TypedContractEvent<
+      LeafInsertedSOLEvent.InputTuple,
+      LeafInsertedSOLEvent.OutputTuple,
+      LeafInsertedSOLEvent.OutputObject
+    >;
+    LeafInsertedSOL: TypedContractEvent<
+      LeafInsertedSOLEvent.InputTuple,
+      LeafInsertedSOLEvent.OutputTuple,
+      LeafInsertedSOLEvent.OutputObject
     >;
 
     "RoleAdminChanged(bytes32,bytes32,bytes32)": TypedContractEvent<

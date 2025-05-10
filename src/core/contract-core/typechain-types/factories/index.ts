@@ -3,4 +3,4 @@
 /* eslint-disable */
 export * as aintiVirusMixerSol from "./AintiVirusMixer.sol";
 export * as tokenSol from "./Token.sol";
-export * as verifierSol from "./Verifier.sol";
+export * as merkleTreeWithHistorySol from "./MerkleTreeWithHistory.sol";
