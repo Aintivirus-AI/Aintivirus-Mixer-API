@@ -85,6 +85,7 @@ export interface AintiVirusMixerInterface extends Interface {
       | "depositVerifier"
       | "ethKnownCommitments"
       | "ethUsedNullifiers"
+      | "fee"
       | "filledSubtreesETH"
       | "filledSubtreesSOL"
       | "getLastETHRoot"
@@ -98,6 +99,8 @@ export interface AintiVirusMixerInterface extends Interface {
       | "levels"
       | "nextIndexETH"
       | "nextIndexSOL"
+      | "refund"
+      | "relayer"
       | "renounceRole"
       | "revertNullifierForSolWithdrawal"
       | "revokeRole"
@@ -180,6 +183,7 @@ export interface AintiVirusMixerInterface extends Interface {
     functionFragment: "ethUsedNullifiers",
     values: [BytesLike]
   ): string;
+  encodeFunctionData(functionFragment: "fee", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "filledSubtreesETH",
     values: [BigNumberish]
@@ -226,6 +230,8 @@ export interface AintiVirusMixerInterface extends Interface {
     functionFragment: "nextIndexSOL",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "refund", values?: undefined): string;
+  encodeFunctionData(functionFragment: "relayer", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceRole",
     values: [BytesLike, AddressLike]
@@ -269,7 +275,7 @@ export interface AintiVirusMixerInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [BytesLike, AintiVirusMixer.WithdrawalProofStruct]
+    values: [BytesLike, AintiVirusMixer.WithdrawalProofStruct, AddressLike]
   ): string;
 
   decodeFunctionResult(
@@ -312,6 +318,7 @@ export interface AintiVirusMixerInterface extends Interface {
     functionFragment: "ethUsedNullifiers",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "fee", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "filledSubtreesETH",
     data: BytesLike
@@ -352,6 +359,8 @@ export interface AintiVirusMixerInterface extends Interface {
     functionFragment: "nextIndexSOL",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "refund", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "relayer", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceRole",
     data: BytesLike
@@ -611,6 +620,8 @@ export interface AintiVirusMixer extends BaseContract {
 
   ethUsedNullifiers: TypedContractMethod<[arg0: BytesLike], [bigint], "view">;
 
+  fee: TypedContractMethod<[], [bigint], "view">;
+
   filledSubtreesETH: TypedContractMethod<
     [arg0: BigNumberish],
     [string],
@@ -652,6 +663,10 @@ export interface AintiVirusMixer extends BaseContract {
   nextIndexETH: TypedContractMethod<[], [bigint], "view">;
 
   nextIndexSOL: TypedContractMethod<[], [bigint], "view">;
+
+  refund: TypedContractMethod<[], [bigint], "view">;
+
+  relayer: TypedContractMethod<[], [string], "view">;
 
   renounceRole: TypedContractMethod<
     [role: BytesLike, callerConfirmation: AddressLike],
@@ -704,7 +719,11 @@ export interface AintiVirusMixer extends BaseContract {
   >;
 
   withdraw: TypedContractMethod<
-    [_root: BytesLike, _proof: AintiVirusMixer.WithdrawalProofStruct],
+    [
+      _root: BytesLike,
+      _proof: AintiVirusMixer.WithdrawalProofStruct,
+      _recipient: AddressLike
+    ],
     [void],
     "nonpayable"
   >;
@@ -762,6 +781,9 @@ export interface AintiVirusMixer extends BaseContract {
     nameOrSignature: "ethUsedNullifiers"
   ): TypedContractMethod<[arg0: BytesLike], [bigint], "view">;
   getFunction(
+    nameOrSignature: "fee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "filledSubtreesETH"
   ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
   getFunction(
@@ -808,6 +830,12 @@ export interface AintiVirusMixer extends BaseContract {
   getFunction(
     nameOrSignature: "nextIndexSOL"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "refund"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "relayer"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "renounceRole"
   ): TypedContractMethod<
@@ -856,7 +884,11 @@ export interface AintiVirusMixer extends BaseContract {
   getFunction(
     nameOrSignature: "withdraw"
   ): TypedContractMethod<
-    [_root: BytesLike, _proof: AintiVirusMixer.WithdrawalProofStruct],
+    [
+      _root: BytesLike,
+      _proof: AintiVirusMixer.WithdrawalProofStruct,
+      _recipient: AddressLike
+    ],
     [void],
     "nonpayable"
   >;

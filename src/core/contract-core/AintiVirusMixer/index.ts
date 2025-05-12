@@ -547,10 +547,11 @@ export default class AintiVirusMixer {
      */
     async withdraw(
         root: string,
-        proof: WithdrawalProof
+        proof: WithdrawalProof,
+        recipient: string
     ): Promise<ethers.ContractTransactionResponse> {
         try {
-            const tx = await this.contract.withdraw(root, proof);
+            const tx = await this.contract.withdraw(root, proof, recipient);
             return tx;
         } catch (error) {
             throw error;
@@ -753,10 +754,11 @@ export default class AintiVirusMixer {
      */
     async populateTransactionWithdraw(
         root: string,
-        proof: WithdrawalProof
+        proof: WithdrawalProof,
+        recipient: string
     ): Promise<ethers.ContractTransaction> {
         try {
-            const tx = await this.contract.withdraw.populateTransaction(root, proof);
+            const tx = await this.contract.withdraw.populateTransaction(root, proof, recipient);
             return tx;
         } catch (error) {
             throw error;

@@ -8,7 +8,7 @@ export { IAccessControl__factory } from "./IAccessControl__factory";
 export { IDepositVerifier__factory } from "./IDepositVerifier__factory";
 export { IERC165__factory } from "./IERC165__factory";
 export { IERC20__factory } from "./IERC20__factory";
-export { IGroth16Verifier__factory } from "./IGroth16Verifier__factory";
+export { IERC20Metadata__factory } from "./IERC20Metadata__factory";
 export { IPoseidon__factory } from "./IPoseidon__factory";
 export { IWithdrawalVrifier__factory } from "./IWithdrawalVrifier__factory";
 export { MerkleTreeWithHistory__factory } from "./MerkleTreeWithHistory__factory";

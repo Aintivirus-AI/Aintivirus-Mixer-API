@@ -8,7 +8,7 @@ export type { IAccessControl } from "./IAccessControl";
 export type { IDepositVerifier } from "./IDepositVerifier";
 export type { IERC165 } from "./IERC165";
 export type { IERC20 } from "./IERC20";
-export type { IGroth16Verifier } from "./IGroth16Verifier";
+export type { IERC20Metadata } from "./IERC20Metadata";
 export type { IPoseidon } from "./IPoseidon";
 export type { IWithdrawalVrifier } from "./IWithdrawalVrifier";
 export type { MerkleTreeWithHistory } from "./MerkleTreeWithHistory";

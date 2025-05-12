@@ -15,6 +15,11 @@ export const MIXER_ABI = [
                 "internalType": "address",
                 "name": "_hasher",
                 "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_relayer",
+                "type": "address"
             }
         ],
         "stateMutability": "nonpayable",
@@ -435,6 +440,19 @@ export const MIXER_ABI = [
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "fee",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "uint32",
@@ -644,6 +662,32 @@ export const MIXER_ABI = [
                 "internalType": "uint32",
                 "name": "",
                 "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "refund",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "relayer",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
             }
         ],
         "stateMutability": "view",
@@ -898,6 +942,11 @@ export const MIXER_ABI = [
                 "internalType": "struct AintiVirusMixer.WithdrawalProof",
                 "name": "_proof",
                 "type": "tuple"
+            },
+            {
+                "internalType": "address",
+                "name": "_recipient",
+                "type": "address"
             }
         ],
         "name": "withdraw",

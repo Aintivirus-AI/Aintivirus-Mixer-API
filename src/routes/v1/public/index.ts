@@ -3,7 +3,7 @@ import Hapi from '@hapi/hapi'
 import Joi from '@hapi/joi'
 
 // ** import controller
-import { DataController, MixerController } from '../../../controller'
+import { MixerController } from '../../../controller'
 
 // ** import helper
 import { GatewayHelper } from '../../../helper'
@@ -13,7 +13,7 @@ import { ResponseUtil } from '../../../utils'
 
 // ** import app constants
 import { METHOD, VERSION, ENDPOINT } from '../../../constant'
-import { join } from 'path'
+import { CORS_CONFIG } from '../../../constant/app'
 
 const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
     /**
@@ -35,6 +35,7 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
         method: METHOD.GET,
         path: VERSION.V1 + ENDPOINT.GET.IP,
         options: {
+            cors: CORS_CONFIG,
             handler: async (request, reply) => {
                 try {
                     const response = await GatewayHelper.getIpDetail(request.info.remoteAddress)
@@ -42,6 +43,7 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
                     return ResponseUtil.sendResponse(response, reply)
                 }
                 catch(error) {
+                    console.error(error)
                     throw error
                 }
             },
@@ -57,6 +59,7 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
         method: METHOD.POST,
         path: VERSION.V1 + ENDPOINT.POST.DEPOSIT_ETH,
         options: {
+            cors: CORS_CONFIG,
             handler: async (request, reply) => {
                 try {
                     const response = await MixerController.depositETH(request.payload)
@@ -76,15 +79,16 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
                     sender: Joi.string().required(),
                 })
             },
-            description: 'API base default public endpoints (POST)',
-            notes: 'Hit the endpoint to check if server is alive',
-            tags: ['baseurl', 'default', 'check api status']
+            description: 'Ethereum deposit request',
+            notes: 'Hit the endpoint with payload to deposit Ethereum',
+            tags: ['/deposit-eth', 'deposit', 'ethereum']
         }
     },
     {
         method: METHOD.POST,
         path: VERSION.V1 + ENDPOINT.POST.DEPOSIT_SOL,
         options: {
+            cors: CORS_CONFIG,
             handler: async (request, reply) => {
                 try {
                     const response = await MixerController.depositSOL(request.payload)
@@ -104,15 +108,16 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
                     sender: Joi.string().required(),
                 })
             },
-            description: 'API base default public endpoints (POST)',
-            notes: 'Hit the endpoint to check if server is alive',
-            tags: ['baseurl', 'default', 'check api status']
+            description: 'Solana deposit request',
+            notes: 'Hit the endpoint with payload to deposit Solana',
+            tags: ['/deposit-sol', 'deposit', 'solana']
         }
     },
     {
         method: METHOD.POST,
         path: VERSION.V1 + ENDPOINT.POST.VALIDATE_ETH_DEPOSIT,
         options: {
+            cors: CORS_CONFIG,
             handler: async (request, reply) => {
                 try {
                     const response = await MixerController.validateETHDeposit(request.payload)
@@ -131,15 +136,16 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
                     txHash: Joi.string().required(),
                 })
             },
-            description: 'API base default public endpoints (POST)',
-            notes: 'Hit the endpoint to check if server is alive',
-            tags: ['baseurl', 'default', 'check api status']
+            description: 'Ethereum deposit validation request',
+            notes: 'Hit the endpoint with transaction hash to validate deposit',
+            tags: ['/validate-eth-deposit', 'ethereum', 'validate']
         }
     },
     {
         method: METHOD.POST,
         path: VERSION.V1 + ENDPOINT.POST.VALIDATE_SOL_DEPOSIT,
         options: {
+            cors: CORS_CONFIG,
             handler: async (request, reply) => {
                 try {
                     const response = await MixerController.validateSOLDeposit(request.payload)
@@ -158,15 +164,16 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
                     txHash: Joi.string().required(),
                 })
             },
-            description: 'API base default public endpoints (POST)',
-            notes: 'Hit the endpoint to check if server is alive',
-            tags: ['baseurl', 'default', 'check api status']
+            description: 'Solana deposit validation request',
+            notes: 'Hit the endpoint with transaction hash to validate deposit',
+            tags: ['/validate-sol-deposit', 'solana', 'validate']
         }
     },
     {
         method: METHOD.POST,
         path: VERSION.V1 + ENDPOINT.POST.WITHDRAW_ETH,
         options: {
+            cors: CORS_CONFIG,
             handler: async (request, reply) => {
                 try {
                     const response = await MixerController.withdrawETH(request.payload)
@@ -184,15 +191,16 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
                     receiver: Joi.string().required(),
                 })
             },
-            description: 'API base default public endpoints (POST)',
-            notes: 'Hit the endpoint to check if server is alive',
-            tags: ['baseurl', 'default', 'check api status']
+            description: 'Ethereum withdrawal request for Solana deposit',
+            notes: 'Hit the endpoint with secret note to make Ethereum withdrawal reuqest',
+            tags: ['/withdraw-eth', 'ethereum', 'withdraw']
         }
     },
     {
         method: METHOD.POST,
         path: VERSION.V1 + ENDPOINT.POST.WITHDRAW_SOL,
         options: {
+            cors: CORS_CONFIG,
             handler: async (request, reply) => {
                 try {
                     const response = await MixerController.withdrawSOL(request.payload)
@@ -210,9 +218,9 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
                     receiver: Joi.string().required()
                 })
             },
-            description: 'API base default public endpoints (POST)',
-            notes: 'Hit the endpoint to check if server is alive',
-            tags: ['baseurl', 'default', 'check api status']
+            description: 'Solana withdrawal request for Ethereum deposits',
+            notes: 'Hit the endpoint with secret note to make Solana withdrawal request',
+            tags: ['/withdraw-sol', 'solana', 'withdraw']
         }
     }
 ]

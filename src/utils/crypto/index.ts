@@ -37,4 +37,12 @@ export default class CryptoUtil {
     static bs58AddressToBigInt = (address: string) => {
         return BigInt('0x' + Buffer.from(bs58.decode(address)).toString('hex'))
     }
+
+    static toSafeTransaction = (transaction: ethers.ContractTransaction | ethers.Transaction | ethers.TransactionRequest) => {
+        return JSON.parse(
+            JSON.stringify(transaction, (_key, value) =>
+                typeof value === 'bigint' ? value.toString() : value
+            )
+        )
+    }
 }
