@@ -539,7 +539,7 @@ class MixerController {
                         console.error("Failed to revert nullifier:", revertError);
                     }
 
-                    throw Boom.internal("Error: Failed to send ETH to receiver");
+                    throw Boom.internal("Error: Failed to send SOL to receiver");
                 }
             }
             else {
@@ -561,7 +561,7 @@ class MixerController {
                         console.error("Failed to revert nullifier:", revertError);
                     }
 
-                    throw Boom.internal("Error: Failed to send ETH to receiver");
+                    throw Boom.internal("Error: Failed to send SPL token to receiver");
                 }
             }
 
