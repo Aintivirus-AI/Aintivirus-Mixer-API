@@ -1,6 +1,6 @@
 import { Readable } from "stream";
 export type RequestPayload = string | object | Buffer | Readable | any
-export type ResponsePayload = { data: object | string | number, status?: string, success?: boolean, code?: number }
+export type ResponsePayload = { data: object | string | number, status?: string, success?: boolean, code?: number, message?: string }
 
 export type TUser = {
     email: string,

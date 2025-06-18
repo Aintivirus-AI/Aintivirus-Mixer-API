@@ -86,6 +86,8 @@ export default class SolanaAintiVirusMixer {
                 decimals = await sdk.getTokenDecimals(this.mint.toBase58())
             }
 
+            console.log(this.splDecimalize(amount, decimals))
+
             return this.program.methods.deposit(
                 mode,
                 this.splDecimalize(amount, decimals),

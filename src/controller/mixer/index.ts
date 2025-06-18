@@ -28,12 +28,12 @@ import ENV from "../../constant/env"
 import { MIXER_ABI } from "../../constant/abi/Mixer"
 
 class MixerController {
-    static canDeposit = async (mode: "ETH-SOL" | "SOL-ETH"): Promise<boolean> => {
-        if (mode === "ETH-SOL") {
+    static canDeposit = async (chain: "ETH" | "SOL"): Promise<boolean> => {
+        if (chain === "ETH") {
             return true
         }
-        else if (mode === "SOL-ETH") {
-
+        else if (chain === "SOL") {
+            return true
         }
         else {
             throw new Error(`Invalid mixing mode!`)
@@ -43,8 +43,13 @@ class MixerController {
         try {
             const { amount, sender, mode } = payload
 
-            const isNative = (mode === 1 || mode === 3)
-            const mixType: "SIMPLE" | "BRIDGE" = (mode === 1 || mode === 2) ? "SIMPLE" : "BRIDGE"
+            // Defind mode
+            // mode 1 is ETH to ETH (simple mix)
+            // mode 2 is AINTI(ERC20) to AINTI(ERC20) (simple mix)
+            // mode 3 is ETH to SOL (bridged mix)
+            // mode 4 is AINTI(ERC20) to AINTI(SPL) (bridged mix)
+            const isNative = (mode === 1 || mode === 3) // mode 1 and 3 are ETH deposit mode
+            const mixType: "SIMPLE" | "BRIDGE" = (mode === 1 || mode === 2) ? "SIMPLE" : "BRIDGE" // mode 1 and 2 are simple mix mode
 
             // Define session variables
             const sessionId = CryptoUtil.generate32BytesRandomHash()
@@ -63,17 +68,18 @@ class MixerController {
             )
             const solanaSDK = new SolanaSDK(ENV.SOL_POOL_PRIVKEY, ENV.SOLANA_RPC_URL)
 
-            // Geernate transactions
+            // Define transaction related variables
             let amountInWei: bigint = 0n
             let amountInLamport: bigint = 0n
             let transactions: Array<ethers.TransactionRequest> = []
 
-            // Get amount in wei
+            // Get amount in wei and lamport
             if (isNative) {
                 amountInWei = ethers.parseEther(
                     Number(amount).toString()
                 )
 
+                // Get ETH to SOL price
                 const solAmount = await CoinMarketcapAPI.getQuoteBySymbol('ETH', 'SOL', amount)
                 amountInLamport = solanaAintiVirusMixer.splDecimalize(
                     solAmount
@@ -119,6 +125,7 @@ class MixerController {
                 )
             }
 
+            // Generate deposit transaction
             if (isNative) {
                 const depositTransaction = await ethereumAintiVirusMixer.populateTransactionDeposit(
                     mode,
@@ -166,6 +173,7 @@ class MixerController {
             await sessionStore.close()
 
             return {
+                success: true,
                 data: {
                     sessionId,
                     expiresAt,
@@ -182,6 +190,11 @@ class MixerController {
         try {
             const { amount, sender, mode } = payload
 
+            // Defind mode
+            // mode 1 is SOL to SOL (simple mix)
+            // mode 2 is AINTI(SPL) to AINTI(SPL) (simple mix)
+            // mode 3 is SOL to ETH (bridged mix)
+            // mode 4 is AINTI(SPL) to AINTI(ERC20) (bridged mix)
             const isNative = (mode === 1 || mode === 3)
             const mixType = (mode === 1 || mode === 2) ? "SIMPLE" : "BRIDGE"
 
@@ -201,11 +214,11 @@ class MixerController {
                 MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
             )
 
-            // Geernate transactions
+            // Declear transaction related variables
             let amountInLamport: bigint = 0n
             let amountInWei: bigint = 0n
 
-            // Get amount in wei
+            // Get amount in wei and lamport
             if (isNative) {
                 amountInLamport = solanaAintiVirusMixer.splDecimalize(amount)
 
@@ -247,6 +260,7 @@ class MixerController {
                 )
             }
 
+            // Generate deposit transaction
             const transaction = await solanaAintiVirusMixer.populateDepositTransaction(mode, amount, sender, commitment)
 
             // Store session data
@@ -270,6 +284,7 @@ class MixerController {
             await sessionStore.close()
 
             return {
+                success: true,
                 data: {
                     sessionId,
                     expiresAt,
@@ -290,16 +305,28 @@ class MixerController {
             const sessionStore = new SessionStore('./src/store/db/session_store.db')
             await sessionStore.initialize()
 
-            // Validate session id
+            // Validate session
             const session = await sessionStore.read(sessionId)
             if (!session) {
-                throw Boom.internal('Error: Invalid session id')
+                return {
+                    success: false,
+                    message: 'Error: Invalid session id',
+                    data: {}
+                }
             }
             if (session.txHash !== '') {
-                throw Boom.internal('Error: Session already validated')
+                return {
+                    success: false,
+                    message: 'Error: Session already validated',
+                    data: {}
+                }
             }
             if (Number(session.expiresAt) < Date.now()) {
-                throw Boom.internal('Error: Session expired')
+                return {
+                    success: false,
+                    message: 'Error: Session expired',
+                    data: {}
+                }
             }
 
             // Validate transaction hash
@@ -312,28 +339,56 @@ class MixerController {
             const transactionIds = sessions.map((session: Session) => session.txHash)
 
             if (!tx) {
-                throw Boom.internal('Error: Invalid transaction hash')
+                return {
+                    success: false,
+                    message: 'Error: Invalid transaction hash',
+                    data: {}
+                }
             }
             if (receipt.status !== 1) {
-                throw Boom.internal('Error: Transaction failed')
+                return {
+                    success: false,
+                    message: 'Error: Transaction failed',
+                    data: {}
+                }
             }
             if (tx.from.toLowerCase() !== session.sender.toLowerCase()) {
-                throw Boom.internal(`Error: Invalid transaction sender. Expected ${session.sender} but got ${tx.from}`)
+                return {
+                    success: false,
+                    message: `Error: Invalid transaction sender. Expected ${session.sender} but got ${tx.from}`,
+                    data: {}
+                }
             }
             if (tx.to.toLowerCase() !== MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS.toLowerCase()) {
-                throw Boom.internal(`Error: Invalid transaction recipient. Expected ${MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS} but got ${tx.to}`)
+                return {
+                    success: false,
+                    message: `Error: Invalid transaction recipient. Expected ${MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS} but got ${tx.to}`,
+                    data: {}
+                }
             }
             if (parsedTx.name !== 'deposit') {
-                throw Boom.internal(`Error: Invalid transaction function. Expected deposit but got ${parsedTx.name}`)
+                return {
+                    success: false,
+                    message: `Error: Invalid transaction function. Expected deposit but got ${parsedTx.name}`,
+                    data: {}
+                }
             }
             // if (parsedTx.args[0].toString().toLowerCase() !== session.currency.toLowerCase()) {
             //     throw Boom.internal(`Error: Invalid transaction argument(currency). Expected ${session.currency} but got ${parsedTx.args[0].toString()}`)
             // }
             if (BigInt(parsedTx.args[1]).toString() !== BigInt(session.amount).toString()) {
-                throw Boom.internal(`Error: Invalid transaction argument(amount). Expected ${BigInt(session.amount).toString()} but got ${BigInt(parsedTx.args[1]).toString()}`)
+                return {
+                    success: false,
+                    message: 'Error: Session already validated',
+                    data: {}
+                }
             }
             if (transactionIds.includes(txHash)) {
-                throw Boom.internal('Error: Transaction ID already exists')
+                return {
+                    success: false,
+                    message: 'Error: Session already validated',
+                    data: {}
+                }
             }
 
             // Create ZK secret note
@@ -350,6 +405,7 @@ class MixerController {
                 console.log("mode is simple")
             }
             else {
+                // Register commitment to onchain program
                 const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
                     ENV.SOLANA_RPC_URL,
                     ENV.SOL_POOL_PRIVKEY,
@@ -380,7 +436,12 @@ class MixerController {
             await sessionStore.update(sessionId, { zkSecret: '', secret: '', nullifier: '', commitment: '' })
             await sessionStore.close()
 
-            return { data: { note } }
+            return { 
+                success: true,
+                data: { 
+                    note 
+                } 
+            }
         }
         catch (error) {
             throw Boom.internal((error as Error).message, { originalError: error });
@@ -394,16 +455,28 @@ class MixerController {
             const sessionStore = new SessionStore('./src/store/db/session_store.db')
             await sessionStore.initialize()
 
-            // Validate session id
+            // Validate session
             const session = await sessionStore.read(sessionId)
             if (!session) {
-                throw Boom.internal('Error: Invalid session id')
+                return {
+                    success: false,
+                    message: 'Error: Invalid session id',
+                    data: {}
+                }
             }
             if (session.txHash !== '') {
-                throw Boom.internal('Error: Session already validated')
+                return {
+                    success: false,
+                    message: 'Error: Session already validated',
+                    data: {}
+                }
             }
             if (Number(session.expiresAt) < Date.now()) {
-                throw Boom.internal('Error: Session expired')
+                return {
+                    success: false,
+                    message: 'Error: Session expired',
+                    data: {}
+                }
             }
 
             // Validate transaction hash
@@ -423,26 +496,52 @@ class MixerController {
             const operatorSOLWallet = Keypair.fromSecretKey(base58.decode(ENV.SOL_POOL_PRIVKEY))
 
             if (!tx1) {
-                throw Boom.internal('Error: Invalid transaction signature')
+                return {
+                    success: false,
+                    message: 'Error: Invalid transaction signature',
+                    data: {}
+                }
             }
             if (!tx1 || !tx1.transaction || !("message" in tx1.transaction)) {
-                throw Boom.internal("Invalid transaction format or not found");
+                return {
+                    success: false,
+                    message: 'Invalid transaction format or not found',
+                    data: {}
+                }
             }
             if (tx1.meta?.err) {
-                throw Boom.internal('Error: Transaction failed');
+                return {
+                    success: false,
+                    message: 'Error: Transaction failed',
+                    data: {}
+                }
             }
             if (sender?.toLowerCase() !== session.sender.toLowerCase()) {
-                throw Boom.internal('Error: Invalid transaction sender');
+                return {
+                    success: false,
+                    message: 'Error: Invalid transaction sender',
+                    data: {}
+                }
             }
             if (transactionIds.includes(txHash)) {
-                throw Boom.internal('Error: Transaction ID already exists')
+                return {
+                    success: false,
+                    message: 'Error: Transaction ID already exists',
+                    data: {}
+                }
             }
             for (const ix of compiledInstructions) {
                 const programId = accountKeys.get(ix.programIdIndex);
                 const txInfo = await connection.getParsedTransaction(txHash, "confirmed");
 
                 // Validate transaction
-                if (!txInfo || !txInfo.meta) throw Boom.internal("Transaction not found");
+                if (!txInfo || !txInfo.meta) {
+                    return {
+                        success: false,
+                        message: 'Transaction not found',
+                        data: {}
+                    }
+                }
 
                 // Case of SOL transfer
                 if (programId.equals(SystemProgram.programId)) {
@@ -460,13 +559,21 @@ class MixerController {
                         }
                     }
                     if (actualTransferAmount !== Number(session.amount)) {
-                        throw Boom.internal(`Error: Invalid transaction argument(amount). Expected: ${session.amount}, Actual: ${actualTransferAmount}`);
+                        return {
+                            success: false,
+                            message: `Error: Invalid transaction argument(amount). Expected: ${session.amount}, Actual: ${actualTransferAmount}`,
+                            data: {}
+                        }
                     }
 
                     // Check transaction recipient
                     const to = accountKeys.get(ix.accountKeyIndexes[1]);
                     if (to.toBase58().toLowerCase() !== operatorSOLWallet.publicKey.toString().toLowerCase()) {
-                        throw Boom.internal(`Error: Invalid transaction receiver. Expected: ${operatorSOLWallet.publicKey.toString()}, Actual: ${to.toBase58()}`);
+                        return {
+                            success: false,
+                            message: `Error: Invalid transaction receiver. Expected: ${operatorSOLWallet.publicKey.toString()}, Actual: ${to.toBase58()}`,
+                            data: {}
+                        }
                     }
                 }
 
@@ -477,7 +584,11 @@ class MixerController {
                         maxSupportedTransactionVersion: 0,
                     });
                     if (!parsedTx || !parsedTx.meta || !parsedTx.transaction) {
-                        throw Boom.internal('Transaction not found or incomplete');
+                        return {
+                            success: false,
+                            message: 'Transaction not found or incomplete',
+                            data: {}
+                        }
                     }
 
                     let actualTransferAmount = 0;
@@ -491,7 +602,11 @@ class MixerController {
                         }
                     }
                     if (actualTransferAmount !== Number(session.amount)) {
-                        throw Boom.internal(`Error: Invalid transaction argument(amount). Expected: ${session.amount}, Actual: ${actualTransferAmount}`);
+                        return {
+                            success: false,
+                            message: `Error: Invalid transaction argument(amount). Expected: ${session.amount}, Actual: ${actualTransferAmount}`,
+                            data: {}
+                        }
                     }
 
                     // Check transaction recipient
@@ -502,10 +617,18 @@ class MixerController {
                     const mintAddress = fromTokenAccountInfo.mint;
 
                     if (mintAddress.toBase58().toLowerCase() !== session.currency.toLowerCase()) {
-                        throw Boom.internal(`Error: Invalid transaction argument(currency). Expected: ${session.currency}, Actual: ${mintAddress.toBase58()}`);
+                        return {
+                            success: false,
+                            message: `Error: Invalid transaction argument(currency). Expected: ${session.currency}, Actual: ${mintAddress.toBase58()}`,
+                            data: {}
+                        }
                     }
                     if (toTokenAccountInfo.owner.toBase58().toLowerCase() !== operatorSOLWallet.publicKey.toString().toLowerCase()) {
-                        throw Boom.internal(`Error: Invalid transaction receiver. Expected: ${operatorSOLWallet.publicKey.toString()}, Actual: ${toTokenAccountInfo.owner.toBase58()}`);
+                        return {
+                            success: false,
+                            message: `Error: Invalid transaction receiver. Expected: ${operatorSOLWallet.publicKey.toString()}, Actual: ${toTokenAccountInfo.owner.toBase58()}`,
+                            data: {}
+                        }
                     }
                 }
             }
@@ -522,10 +645,7 @@ class MixerController {
                 }
             }
             else {
-                console.log(session.commitment)
-                console.log(CryptoUtil.bigIntToBytes32(BigInt(session.commitment)))
-
-                
+                // Register commitment to onchain program
                 const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
                 const tx = await ethereumAintiVirusMixer.registerSolToEthCommitment(CryptoUtil.bigIntToBytes32(BigInt(session.commitment)))
                 await tx.wait()
@@ -544,7 +664,12 @@ class MixerController {
             await sessionStore.update(sessionId, { zkSecret: '', secret: '', nullifier: '', commitment: '' })
             await sessionStore.close()
 
-            return { data: { note } }
+            return { 
+                success: true,
+                data: { 
+                    note 
+                } 
+            }
         }
         catch (error) {
             throw Boom.internal((error as Error).message, { originalError: error });
@@ -562,7 +687,11 @@ class MixerController {
             // Pre verification
             const preproofValidation = await ZkSolana.offchainVerifyProof(noteObject.proof)
             if (!preproofValidation) {
-                throw Boom.internal('Error: Invalid proof')
+                return {
+                    success: false,
+                    message: 'Error: Invalid proof',
+                    data: {}
+                }
             }
 
             const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
@@ -579,8 +708,11 @@ class MixerController {
 
             const nullifierHash = ZkSnark.computeNullifierHash(BigInt(nullifier))
             if (nullifierHash.toString() !== noteObject.proof.publicSignals[0].toString()) {
-                console.log(nullifierHash, noteObject.proof.publicSignals[0])
-                throw Boom.internal("Invalid secret and nullifier provided")
+                return {
+                    success: false,
+                    message: "Invalid secret and nullifier provided",
+                    data: {}
+                }
             }
 
             const commitment = ZkSnark.computeCommitment(
@@ -594,13 +726,18 @@ class MixerController {
                 await solanaAintiVirusMixer.validateCommitment(commitment)
             }
             catch {
-                throw Boom.internal("Unknown commitment")
+                return {
+                    success: false,
+                    message: "Unknown commitment",
+                    data: {}
+                }
             }
 
             // Withdrawal process
             const txSig = await solanaAintiVirusMixer.withdraw(receiver, noteObject.proof.proof, noteObject.proof.publicSignals)
 
             return {
+                success: true,
                 data: {
                     txSig
                 }
@@ -623,7 +760,11 @@ class MixerController {
             // Pre verification
             const preproofValidation = await ZkSnark.offchainVerify({ proof: noteObject.proof.proof, publicSignals: noteObject.proof.publicSignals })
             if (!preproofValidation) {
-                throw Boom.internal('Error: Invalid proof')
+                return {
+                    success: false,
+                    message: "Error: Invalid proof",
+                    data: {}
+                }
             }
 
             const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(
@@ -639,7 +780,11 @@ class MixerController {
 
             const nullifierHash = ZkSnark.computeNullifierHash(BigInt(nullifier))
             if (nullifierHash.toString() !== noteObject.proof.publicSignals[0].toString()) {
-                throw new Error("Invalid secret and nullifier provided")
+                return {
+                    success: false,
+                    message: "Invalid secret and nullifier provided",
+                    data: {}
+                }
             }
 
             const commitment = ZkSnark.computeCommitment(
@@ -654,7 +799,11 @@ class MixerController {
             )
 
             if (!isCommitmentValid) {
-                throw Boom.internal("Unknown commitment")
+                return {
+                    success: false,
+                    message: "Unknown commitment",
+                    data: {}
+                }
             }
 
             // Withdrawal commitments
@@ -670,6 +819,7 @@ class MixerController {
             await tx.wait()
 
             return {
+                success: true,
                 data: {
                     txSig: tx.hash
                 }
