@@ -4,6 +4,7 @@ const ENV = {
     CMC_API_KEY: process.env.CMC_API_KEY as string,
     ETHEREUM_RPC_URL: process.env.ETHEREUM_RPC_URL as string,
     SOLANA_RPC_URL: process.env.SOLANA_RPC_URL as string,
+    INFURA_API_KEY: process.env.INFURA_API_KEY as string
 }
 
 export default ENV

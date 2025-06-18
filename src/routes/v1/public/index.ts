@@ -3,7 +3,7 @@ import Hapi from '@hapi/hapi'
 import Joi from '@hapi/joi'
 
 // ** import controller
-import { MixerController } from '../../../controller'
+import { MixerController, DataController } from '../../../controller'
 
 // ** import helper
 import { GatewayHelper } from '../../../helper'
@@ -25,6 +25,46 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
         options: {
             handler: (request, reply) => {
                 return reply.view('index')
+            },
+            description: 'API base default public endpoints (GET)',
+            notes: 'Hit the endpoint to check if server is alive',
+            tags: ['baseurl', 'default', 'check api status']
+        }
+    },
+    {
+        method: METHOD.GET,
+        path: VERSION.V1 + ENDPOINT.GET.TOTAL_SUPPLY,
+        options: {
+            handler: async (request, reply) => {
+                try {
+                    const totalSupply = await DataController.totalSupply()
+
+                    return totalSupply
+                }
+                catch(error) {
+                    console.error(error)
+                    throw error
+                }
+            },
+            description: 'API base default public endpoints (GET)',
+            notes: 'Hit the endpoint to check if server is alive',
+            tags: ['baseurl', 'default', 'check api status']
+        }
+    },
+    {
+        method: METHOD.GET,
+        path: VERSION.V1 + ENDPOINT.GET.CIRCULATING_SUPPLY,
+        options: {
+            handler: async (request, reply) => {
+                try {
+                    const totalSupply = await DataController.totalSupply()
+
+                    return totalSupply
+                }
+                catch(error) {
+                    console.error(error)
+                    throw error
+                }
             },
             description: 'API base default public endpoints (GET)',
             notes: 'Hit the endpoint to check if server is alive',
@@ -74,8 +114,8 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
             validate: {
                 failAction: ResponseUtil.failAction,
                 payload: Joi.object({
-                    amount: Joi.string().required(),
-                    currency: Joi.string().required(),
+                    amount: Joi.number().required(),
+                    mode: Joi.number().required(),
                     sender: Joi.string().required(),
                 })
             },
@@ -104,7 +144,7 @@ const PUBLIC_ROUTER: Hapi.ServerRoute[] = [
                 failAction: ResponseUtil.failAction,
                 payload: Joi.object({
                     amount: Joi.number().required(),
-                    currency: Joi.string().required(),
+                    mode: Joi.number().required(),
                     sender: Joi.string().required(),
                 })
             },

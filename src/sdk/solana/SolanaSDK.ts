@@ -28,12 +28,12 @@ export default class SolanaSDK {
         this.payer = Keypair.fromSecretKey(bs58.decode(privateKey));
     }
 
-    splDecimalize = (value: number, decimals: number = 9): BN => {
+    static splDecimalize = (value: number, decimals: number = 9): BN => {
         // return new BN(value).mul(new BN(10).pow(new BN(decimals)))
         return BigInt(Math.floor(value * 10 ** decimals));
     }
 
-    deSplDecimalize = (value: BN, decimals: number = 9) => {
+    static deSplDecimalize = (value: BN, decimals: number = 9) => {
         // return value.div(new BN(10 ** decimals)).toNumber() + value.mod(new BN(10 ** decimals)).toNumber() / (10 ** decimals);
         return Number(value) / 10 ** decimals;
     }
@@ -41,7 +41,7 @@ export default class SolanaSDK {
     async sendSol(destination: string, amountSol: number): Promise<string> {
         try {
             const recipient = new PublicKey(destination);
-            const lamports = this.splDecimalize(amountSol);
+            const lamports = SolanaSDK.splDecimalize(amountSol);
 
             const transaction = new Transaction().add(
                 SystemProgram.transfer({
@@ -80,7 +80,7 @@ export default class SolanaSDK {
             const fromTokenAccount = await getAssociatedTokenAddress(mint, this.payer.publicKey);
             const toTokenAccount = await getAssociatedTokenAddress(mint, recipient);
 
-            const amountInSmallestUnit = this.splDecimalize(amount, decimals);
+            const amountInSmallestUnit = SolanaSDK.splDecimalize(amount, decimals);
 
             const transaction = new Transaction();
 
@@ -133,7 +133,7 @@ export default class SolanaSDK {
                 SystemProgram.transfer({
                     fromPubkey: new PublicKey(payer),
                     toPubkey: recipient,
-                    lamports: this.splDecimalize(amountSOL, 9),
+                    lamports: SolanaSDK.splDecimalize(amountSOL, 9),
                 })
             );
             return transaction;
@@ -160,7 +160,7 @@ export default class SolanaSDK {
             const fromTokenAccount = await getAssociatedTokenAddress(mint, new PublicKey(payer));
             const toTokenAccount = await getAssociatedTokenAddress(mint, recipient);
 
-            const amountInSmallestUnit = this.splDecimalize(amount, decimals);
+            const amountInSmallestUnit = SolanaSDK.splDecimalize(amount, decimals);
 
             const transaction = new Transaction();
 

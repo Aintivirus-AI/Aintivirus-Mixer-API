@@ -11,29 +11,40 @@ import { TOKEN_PROGRAM_ID, getAccount } from "@solana/spl-token"
 import base58 from 'bs58'
 // ** import custom type
 import { ResponsePayload, RequestPayload } from "../../types"
-import { NoteObj } from "../../zksnark/ZkSnark"
 // ** import custom libraries
 import { CryptoUtil } from "../../utils"
 import SessionStore, { Session } from "../../store/db/SessionStore"
-import ZkSnark from "../../zksnark/ZkSnark"
+import ZkSnark, { SolWithdrawalNoteObject, EthereumWithdrawalNoteObject, EthereumProof } from "../../zksnark/ZkSnark"
+import ZkSolana, { SolanaProof } from '../../zksnark/ZkSnark-Solana'
 import { CoinMarketcapAPI, SolanaSDK } from "../../sdk"
-import { AintiVirusMixer, ERC20Standard, MerkleTreeReconstructor, MerkleTreeVerifier } from "../../core/contract-core"
+import {
+    EthereumAintiVirusMixer,
+    ERC20Standard,
+    SolanaAintiVirusMixer
+} from "../../core/contract-core"
 // ** import local constants
 import { MIX_CONFIG } from "../../constant"
 import ENV from "../../constant/env"
 import { MIXER_ABI } from "../../constant/abi/Mixer"
-import { TreeType } from '../../core/contract-core/MerkleTreeReConstructor'
 
 class MixerController {
+    static canDeposit = async (mode: "ETH-SOL" | "SOL-ETH"): Promise<boolean> => {
+        if (mode === "ETH-SOL") {
+            return true
+        }
+        else if (mode === "SOL-ETH") {
+
+        }
+        else {
+            throw new Error(`Invalid mixing mode!`)
+        }
+    }
     static depositETH = async (payload: RequestPayload): Promise<ResponsePayload> => {
         try {
-            const { amount, currency, sender } = payload
+            const { amount, sender, mode } = payload
 
-            if (MIX_CONFIG.ETH2SOL_CURRENCY_MAP[currency] === undefined) {
-                throw Boom.internal('Error: Unknown currency can not be processed')
-            }
-
-            const isNative = currency === MIX_CONFIG.ADDRESS.ETH_COIN_ADDRESS ? true : false
+            const isNative = (mode === 1 || mode === 3)
+            const mixType: "SIMPLE" | "BRIDGE" = (mode === 1 || mode === 2) ? "SIMPLE" : "BRIDGE"
 
             // Define session variables
             const sessionId = CryptoUtil.generate32BytesRandomHash()
@@ -41,40 +52,78 @@ class MixerController {
             const expires = timestamp + MIX_CONFIG.EXPIRES
             const expiresAt = timestamp + expires
 
-            // Process currency metadata
-            const aintiVirusMixer = new AintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
-            const erc20Standard = new ERC20Standard(currency, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+            // Define SDK and contract clients
+            const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+            const erc20Standard = new ERC20Standard(MIX_CONFIG.ADDRESS.ETH_TOKEN, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                ENV.SOLANA_RPC_URL,
+                ENV.SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
+            const solanaSDK = new SolanaSDK(ENV.SOL_POOL_PRIVKEY, ENV.SOLANA_RPC_URL)
 
             // Geernate transactions
-            let amountInWei: bigint = 0n;
+            let amountInWei: bigint = 0n
+            let amountInLamport: bigint = 0n
             let transactions: Array<ethers.TransactionRequest> = []
 
             // Get amount in wei
             if (isNative) {
-                amountInWei = ethers.parseEther(amount)
+                amountInWei = ethers.parseEther(
+                    Number(amount).toString()
+                )
+
+                const solAmount = await CoinMarketcapAPI.getQuoteBySymbol('ETH', 'SOL', amount)
+                amountInLamport = solanaAintiVirusMixer.splDecimalize(
+                    solAmount
+                )
             }
             else {
-                const decimals = await erc20Standard.decimals()
-                amountInWei = ethers.parseUnits(amount, decimals)
+                const erc20TokenDecimals = await erc20Standard.decimals()
+                const splTokenDecimals = await solanaSDK.getTokenDecimals(MIX_CONFIG.ADDRESS.SOL_TOKEN)
+
+                amountInWei = ethers.parseUnits(
+                    Number(amount).toString(),
+                    erc20TokenDecimals
+                )
+                amountInLamport = solanaAintiVirusMixer.splDecimalize(
+                    amount,
+                    splTokenDecimals
+                )
             }
 
             // Generate zksnark data
             const { secret, nullifier } = ZkSnark.generateSecretAndNullifier()
-            const zkPreProofData = await ZkSnark.createPreProof(secret, nullifier, currency, amountInWei)
-            const commitment = ZkSnark.computeCommitment(secret, nullifier, currency, amountInWei)
+            let zkProof: EthereumProof | SolanaProof;
+            let commitment: bigint;
 
+            if (mixType === "SIMPLE") {
+                commitment = ZkSnark.computeCommitment(secret, nullifier, amountInWei, mode)
+                zkProof = await ZkSnark.createWithdrawalProof(
+                    secret,
+                    nullifier,
+                    amountInWei,
+                    commitment,
+                    mode
+                )
+            }
+            else {
+                commitment = ZkSnark.computeCommitment(secret, nullifier, amountInLamport, mode)
+                zkProof = await ZkSolana.generateProof(
+                    secret.toString(),
+                    nullifier.toString(),
+                    amountInLamport.toString(),
+                    commitment.toString(),
+                    mode
+                )
+            }
 
             if (isNative) {
-                const depositTransaction = await aintiVirusMixer.populateTransactionDeposit(
-                    currency,
+                const depositTransaction = await ethereumAintiVirusMixer.populateTransactionDeposit(
+                    mode,
                     amountInWei.toString(),
-                    CryptoUtil.bigIntToBytes32(commitment),
-                    {
-                        pA: zkPreProofData.calldata.a,
-                        pB: zkPreProofData.calldata.b,
-                        pC: zkPreProofData.calldata.c,
-                        pubSignals: zkPreProofData.publicSignals.map(signal => signal.toString()) as [string, string, string, string, string]
-                    }
+                    CryptoUtil.bigIntToBytes32(commitment)
                 )
 
                 // Sanitize BigInts in transaction objec
@@ -85,16 +134,10 @@ class MixerController {
                     MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS,
                     amountInWei.toString()
                 )
-                const depositTransaction = await aintiVirusMixer.populateTransactionDeposit(
-                    currency,
+                const depositTransaction = await ethereumAintiVirusMixer.populateTransactionDeposit(
+                    mode,
                     amountInWei.toString(),
-                    CryptoUtil.bigIntToBytes32(commitment),
-                    {
-                        pA: zkPreProofData.calldata.a,
-                        pB: zkPreProofData.calldata.b,
-                        pC: zkPreProofData.calldata.c,
-                        pubSignals: zkPreProofData.publicSignals.map(signal => signal.toString()) as [string, string, string, string, string]
-                    }
+                    CryptoUtil.bigIntToBytes32(commitment)
                 )
 
                 // Sanitize BigInts in transaction objec
@@ -107,13 +150,14 @@ class MixerController {
             await sessionStore.initialize()
 
             await sessionStore.create({
+                mixType,
                 amount: Number(amountInWei),
-                currency,
+                currency: MIX_CONFIG.ADDRESS.ETH_TOKEN,
                 expiresAt,
                 id: sessionId,
                 sender,
                 txHash: '',
-                zkSecret: JSON.stringify(zkPreProofData),
+                zkSecret: JSON.stringify(zkProof),
                 secret: secret.toString(),
                 nullifier: nullifier.toString(),
                 commitment: commitment.toString()
@@ -136,14 +180,10 @@ class MixerController {
     }
     static depositSOL = async (payload: RequestPayload): Promise<ResponsePayload> => {
         try {
-            const { amount, currency, sender } = payload
+            const { amount, sender, mode } = payload
 
-            if (MIX_CONFIG.SOL2ETH_CURRENCY_MAP[currency] === undefined) {
-                throw Boom.internal('Error: Unknown currency can not be processed')
-            }
-
-            const isNative = currency === MIX_CONFIG.ADDRESS.SOL_COIN_ADDRESS ? true : false
-            const operatorSOLWallet = Keypair.fromSecretKey(base58.decode(ENV.SOL_POOL_PRIVKEY))
+            const isNative = (mode === 1 || mode === 3)
+            const mixType = (mode === 1 || mode === 2) ? "SIMPLE" : "BRIDGE"
 
             // Define session variables
             const sessionId = CryptoUtil.generate32BytesRandomHash()
@@ -151,56 +191,79 @@ class MixerController {
             const expires = timestamp + MIX_CONFIG.EXPIRES
             const expiresAt = timestamp + expires
 
-            // Process currency metadata
+            // Define SDK and contract clients
             const solanaSDK = new SolanaSDK(ENV.SOL_POOL_PRIVKEY, ENV.SOLANA_RPC_URL)
-            const erc20Standard = new ERC20Standard(MIX_CONFIG.SOL2ETH_CURRENCY_MAP[currency], ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+            const erc20Standard = new ERC20Standard(MIX_CONFIG.ADDRESS.ETH_TOKEN, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                ENV.SOLANA_RPC_URL,
+                ENV.SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
 
             // Geernate transactions
-            let amountInLamport: bigint = 0n;
-            let transaction: Transaction;
-            let etherAmount: bigint = 0n
+            let amountInLamport: bigint = 0n
+            let amountInWei: bigint = 0n
 
             // Get amount in wei
             if (isNative) {
-                amountInLamport = solanaSDK.splDecimalize(amount)
-                transaction = await solanaSDK.buildSendSOLTransaction(operatorSOLWallet.publicKey.toString(), amount, sender)
+                amountInLamport = solanaAintiVirusMixer.splDecimalize(amount)
 
                 const ethPrice = await CoinMarketcapAPI.getQuoteBySymbol('SOL', 'ETH', amount)
-                etherAmount = ethers.parseEther(ethPrice.toFixed(3).toString())
+                amountInWei = ethers.parseEther(ethPrice.toFixed(3).toString())
             }
             else {
-                const splTokenDecimals = await solanaSDK.getTokenDecimals(currency)
-                amountInLamport = solanaSDK.splDecimalize(amount, splTokenDecimals)
-                transaction = await solanaSDK.buildSendSPLTransaction(currency, operatorSOLWallet.publicKey.toString(), Number(amount), sender)
-
                 const erc20TokenDecimals = await erc20Standard.decimals()
-                etherAmount = ethers.parseUnits(amount.toFixed(3).toString(), erc20TokenDecimals)
+                const splTokenDecimals = await solanaSDK.getTokenDecimals(MIX_CONFIG.ADDRESS.SOL_TOKEN)
+
+                amountInLamport = solanaAintiVirusMixer.splDecimalize(amount, splTokenDecimals)
+                amountInWei = ethers.parseUnits(amount.toFixed(3).toString(), erc20TokenDecimals)
             }
 
             // Generate zksnark data
             const { secret, nullifier } = ZkSnark.generateSecretAndNullifier()
-            const zkPreProofData = await ZkSnark.createPreProof(secret, nullifier, MIX_CONFIG.SOL2ETH_CURRENCY_MAP[currency], etherAmount)
-            const commitment = ZkSnark.computeCommitment(
-                secret,
-                nullifier,
-                MIX_CONFIG.SOL2ETH_CURRENCY_MAP[currency],
-                etherAmount
-            )
+            let commitment: bigint;
+            let zkProof: EthereumProof | SolanaProof;
+
+            if (mixType === "SIMPLE") {
+                commitment = ZkSnark.computeCommitment(secret, nullifier, amountInLamport, mode)
+
+                zkProof = await ZkSolana.generateProof(
+                    secret.toString(),
+                    nullifier.toString(),
+                    amountInLamport.toString(),
+                    commitment.toString(),
+                    mode
+                )
+            } else {
+                commitment = ZkSnark.computeCommitment(secret, nullifier, amountInWei, mode)
+
+                zkProof = await ZkSnark.createWithdrawalProof(
+                    secret,
+                    nullifier,
+                    amountInWei,
+                    commitment,
+                    mode
+                )
+            }
+
+            const transaction = await solanaAintiVirusMixer.populateDepositTransaction(mode, amount, sender, commitment)
 
             // Store session data
             const sessionStore = new SessionStore('./src/store/db/session_store.db')
             await sessionStore.initialize()
 
             await sessionStore.create({
+                mixType,
                 amount: Number(amountInLamport.toString()),
-                currency,
+                currency: MIX_CONFIG.ADDRESS.ETH_TOKEN,
                 expiresAt,
                 id: sessionId,
                 sender,
                 txHash: '',
                 secret: secret.toString(),
                 nullifier: nullifier.toString(),
-                zkSecret: JSON.stringify(zkPreProofData),
+                zkSecret: JSON.stringify(zkProof),
                 commitment: commitment.toString()
             })
 
@@ -263,9 +326,9 @@ class MixerController {
             if (parsedTx.name !== 'deposit') {
                 throw Boom.internal(`Error: Invalid transaction function. Expected deposit but got ${parsedTx.name}`)
             }
-            if (parsedTx.args[0].toString().toLowerCase() !== session.currency.toLowerCase()) {
-                throw Boom.internal(`Error: Invalid transaction argument(currency). Expected ${session.currency} but got ${parsedTx.args[0].toString()}`)
-            }
+            // if (parsedTx.args[0].toString().toLowerCase() !== session.currency.toLowerCase()) {
+            //     throw Boom.internal(`Error: Invalid transaction argument(currency). Expected ${session.currency} but got ${parsedTx.args[0].toString()}`)
+            // }
             if (BigInt(parsedTx.args[1]).toString() !== BigInt(session.amount).toString()) {
                 throw Boom.internal(`Error: Invalid transaction argument(amount). Expected ${BigInt(session.amount).toString()} but got ${BigInt(parsedTx.args[1]).toString()}`)
             }
@@ -274,16 +337,44 @@ class MixerController {
             }
 
             // Create ZK secret note
-            const noteObj: NoteObj = {
-                currency: session.currency,
-                type: 'ETH2SOL',
-                secret: session.secret,
-                nullifier: session.nullifier,
-                commitment: session.commitment,
-                zkData: JSON.parse(session.zkSecret)
+            let noteObject: EthereumWithdrawalNoteObject | SolWithdrawalNoteObject;
+
+            if (session.mixType === "SIMPLE") {
+                const withdrawalProof: EthereumProof = JSON.parse(session.zkSecret);
+
+                noteObject = {
+                    secret: session.secret,
+                    nullifier: session.nullifier,
+                    proof: withdrawalProof
+                }
+                console.log("mode is simple")
+            }
+            else {
+                const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                    ENV.SOLANA_RPC_URL,
+                    ENV.SOL_POOL_PRIVKEY,
+                    MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                    MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+                )
+
+                const txSig = await solanaAintiVirusMixer.registerEthSolCommitment(
+                    BigInt(
+                        session.commitment
+                    )
+                )
+
+                const withdrawalProof: SolanaProof = JSON.parse(session.zkSecret);
+
+                noteObject = {
+                    secret: session.secret,
+                    nullifier: session.nullifier,
+                    proof: withdrawalProof
+                }
+                console.log("mode is bridge")
+                console.log("txSig: ", txSig)
             }
 
-            const note = base58.encode(Buffer.from(JSON.stringify(noteObj)))
+            const note = base58.encode(Buffer.from(JSON.stringify(noteObject)))
 
             // Clear Zk secret note in session
             await sessionStore.update(sessionId, { zkSecret: '', secret: '', nullifier: '', commitment: '' })
@@ -420,21 +511,34 @@ class MixerController {
             }
 
             // Create ZK secret note
-            const noteObj: NoteObj = {
-                currency: session.currency,
-                type: 'SOL2ETH',
-                secret: session.secret,
-                nullifier: session.nullifier,
-                commitment: session.commitment,
-                zkData: JSON.parse(session.zkSecret)
+            let noteObj: EthereumWithdrawalNoteObject | SolWithdrawalNoteObject;
+
+            if (session.mixType === "SIMPLE") {
+                const withdrawalProof: SolanaProof = JSON.parse(session.zkSecret)
+                noteObj = {
+                    secret: session.secret,
+                    nullifier: session.nullifier,
+                    proof: withdrawalProof
+                }
+            }
+            else {
+                console.log(session.commitment)
+                console.log(CryptoUtil.bigIntToBytes32(BigInt(session.commitment)))
+
+                
+                const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+                const tx = await ethereumAintiVirusMixer.registerSolToEthCommitment(CryptoUtil.bigIntToBytes32(BigInt(session.commitment)))
+                await tx.wait()
+
+                const withdrawalProof: EthereumProof = JSON.parse(session.zkSecret)
+                noteObj = {
+                    secret: session.secret,
+                    nullifier: session.nullifier,
+                    proof: withdrawalProof
+                }
             }
 
             const note = base58.encode(Buffer.from(JSON.stringify(noteObj)))
-
-            // Add commitment on Mixer smart contract on Ethereum
-            const aintiVirusMixer = new AintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
-            const tx = await aintiVirusMixer.addCommitmentForEthWithdrawal(CryptoUtil.bigIntToBytes32(BigInt(session.commitment)))
-            await tx.wait()
 
             // Clear Zk secret note in session
             await sessionStore.update(sessionId, { zkSecret: '', secret: '', nullifier: '', commitment: '' })
@@ -449,124 +553,52 @@ class MixerController {
     static withdrawSOL = async (payload: RequestPayload): Promise<ResponsePayload> => {
         try {
             const { note, receiver } = payload
-            const noteObj: NoteObj = JSON.parse(
+            const noteObject: SolWithdrawalNoteObject = JSON.parse(
                 Buffer.from(
                     base58.decode(note)
                 ).toString('utf8')
             )
 
-            let txSig: string = ''
-
-            const preproofValidation = await ZkSnark.offchainVerifyPreProof(noteObj.zkData)
+            // Pre verification
+            const preproofValidation = await ZkSolana.offchainVerifyProof(noteObject.proof)
             if (!preproofValidation) {
                 throw Boom.internal('Error: Invalid proof')
             }
 
-            const solanaSDK = new SolanaSDK(ENV.SOL_POOL_PRIVKEY, ENV.SOLANA_RPC_URL)
-            const aintiVirusMixer = new AintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
-            const merkleReConstructor = new MerkleTreeReconstructor(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL)
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                ENV.SOLANA_RPC_URL,
+                ENV.SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
 
-            const nullifierHash = ZkSnark.computeNullifierHash(BigInt(noteObj.nullifier))
-            const { currency, amount } = ZkSnark.recoverPreProofData(noteObj.zkData)
+            // Recover and verify commitment
+            const secret = noteObject.secret
+            const nullifier = noteObject.nullifier
+            const publicSignals = noteObject.proof.publicSignals
+
+            const nullifierHash = ZkSnark.computeNullifierHash(BigInt(nullifier))
+            if (nullifierHash.toString() !== noteObject.proof.publicSignals[0].toString()) {
+                console.log(nullifierHash, noteObject.proof.publicSignals[0])
+                throw Boom.internal("Invalid secret and nullifier provided")
+            }
 
             const commitment = ZkSnark.computeCommitment(
-                BigInt(noteObj.secret),
-                BigInt(noteObj.nullifier),
-                BigInt(currency),
-                amount
+                BigInt(secret),
+                BigInt(nullifier),
+                publicSignals[1],
+                publicSignals[2]
             )
 
-            const leafIndex = await aintiVirusMixer.getSolLeafIndexByCommitment(CryptoUtil.bigIntToBytes32(commitment))
-
-            if (leafIndex === null) {
-                throw Boom.internal('Error: Invalid commitment. Leaf not found')
+            try {
+                await solanaAintiVirusMixer.validateCommitment(commitment)
+            }
+            catch {
+                throw Boom.internal("Unknown commitment")
             }
 
-            const { root, path } = await merkleReConstructor.getLastRootAndMerklePath(TreeType.SOL, leafIndex)
-
-            const withdrawalProof = await ZkSnark.createWithdrawalProof(
-                BigInt(noteObj.secret),
-                BigInt(noteObj.nullifier),
-                path.pathElements,
-                path.pathIndices,
-                leafIndex,
-                nullifierHash,
-                root,
-                currency,
-                amount,
-                receiver,
-                true
-            )
-
-            // console.log(BigInt(root))
-            // console.log(withdrawalProof.publicSignals)
-
-            const merkleVerifier = new MerkleTreeVerifier(20)
-            const merkleVerification = await merkleVerifier.verifyMerkleProof(CryptoUtil.bigIntToBytes32(commitment), BigInt(root).toString(), path)
-
-            // Pre check merkle proof before zk proof verification on smart contract
-            if (!merkleVerification) {
-                throw Boom.internal('Error: Invalid Merkle proof')
-            }
-
-            const validationTx = await aintiVirusMixer.verifySolWithdrawal(
-                root,
-                {
-                    pA: withdrawalProof.calldata.a,
-                    pB: withdrawalProof.calldata.b,
-                    pC: withdrawalProof.calldata.c,
-                    pubSignals: withdrawalProof.publicSignals.map(signal => signal.toString()) as [string, string, string, string, string, string, string, string, string, string]
-                }
-            )
-
-            await validationTx.wait()
-
-            if (currency === MIX_CONFIG.ADDRESS.ETH_COIN_ADDRESS) {
-                const formattedAmount = ethers.formatEther(amount)
-                const solAmount = await CoinMarketcapAPI.getQuoteBySymbol('ETH', 'sol', formattedAmount)
-
-                try {
-                    txSig = await solanaSDK.sendSol(receiver, solAmount - MIX_CONFIG.MIX_FEE.SOLANA.REFUND)
-                }
-                catch (error) {
-                    try {
-                        const tx = await aintiVirusMixer.revertNullifierForSolWithdrawal(
-                            CryptoUtil.bigIntToBytes32(nullifierHash)
-                        );
-                        await tx.wait();
-                        console.log("Nullifier reverted");
-                    } catch (revertError) {
-                        console.error("Failed to revert nullifier:", revertError);
-                    }
-
-                    throw Boom.internal("Error: Failed to send SOL to receiver");
-                }
-            }
-            else {
-                const erc20Standard = new ERC20Standard(currency, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
-                const decimals = await erc20Standard.decimals()
-                const formattedAmount = ethers.formatUnits(noteObj.zkData.publicSignals[4], decimals)
-
-                try {
-                    txSig = await solanaSDK.sendSPLToken(MIX_CONFIG.ETH2SOL_CURRENCY_MAP[currency], receiver, Number(formattedAmount) - MIX_CONFIG.MIX_FEE.SOLANA.FEE)
-                }
-                catch (error) {
-                    try {
-                        const tx = await aintiVirusMixer.revertNullifierForSolWithdrawal(
-                            CryptoUtil.bigIntToBytes32(nullifierHash)
-                        );
-                        await tx.wait();
-                        console.log("Nullifier reverted");
-                    } catch (revertError) {
-                        console.error("Failed to revert nullifier:", revertError);
-                    }
-
-                    throw Boom.internal("Error: Failed to send SPL token to receiver");
-                }
-            }
-
-            const tx = await aintiVirusMixer.setNullifierForSolWithdrawal(CryptoUtil.bigIntToBytes32(nullifierHash))
-            await tx.wait()
+            // Withdrawal process
+            const txSig = await solanaAintiVirusMixer.withdraw(receiver, noteObject.proof.proof, noteObject.proof.publicSignals)
 
             return {
                 data: {
@@ -582,64 +614,59 @@ class MixerController {
     static withdrawETH = async (payload: RequestPayload): Promise<ResponsePayload> => {
         try {
             const { note, receiver } = payload
-            const noteObj: NoteObj = JSON.parse(
+            const noteObject: EthereumWithdrawalNoteObject = JSON.parse(
                 Buffer.from(
                     base58.decode(note)
                 ).toString('utf8')
             )
 
-            const aintiVirusMixer = new AintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
-            const merkleReConstructor = new MerkleTreeReconstructor(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL)
+            // Pre verification
+            const preproofValidation = await ZkSnark.offchainVerify({ proof: noteObject.proof.proof, publicSignals: noteObject.proof.publicSignals })
+            if (!preproofValidation) {
+                throw Boom.internal('Error: Invalid proof')
+            }
 
-            const nullifierHash = ZkSnark.computeNullifierHash(BigInt(noteObj.nullifier))
-            const { currency, amount } = ZkSnark.recoverPreProofData(noteObj.zkData)
+            const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(
+                MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS,
+                ENV.ETHEREUM_RPC_URL,
+                ENV.ETH_POOL_PRIVKEY
+            )
+
+            // Recover and verify commitment
+            const secret = noteObject.secret
+            const nullifier = noteObject.nullifier
+            const publicSignals = noteObject.proof.publicSignals
+
+            const nullifierHash = ZkSnark.computeNullifierHash(BigInt(nullifier))
+            if (nullifierHash.toString() !== noteObject.proof.publicSignals[0].toString()) {
+                throw new Error("Invalid secret and nullifier provided")
+            }
 
             const commitment = ZkSnark.computeCommitment(
-                BigInt(noteObj.secret),
-                BigInt(noteObj.nullifier),
-                BigInt(currency),
-                amount
+                BigInt(secret),
+                BigInt(nullifier),
+                publicSignals[1],
+                publicSignals[2]
             )
 
-            const leafIndex = await aintiVirusMixer.getEthLeafIndexByCommitment(CryptoUtil.bigIntToBytes32(commitment))
-            const { root, path } = await merkleReConstructor.getLastRootAndMerklePath(TreeType.ETH, leafIndex)
-
-            if (leafIndex === null) {
-                throw Boom.internal('Error: Invalid commitment')
-            }
-
-            const merkleVerifier = new MerkleTreeVerifier(20)
-            const merkleVerification = await merkleVerifier.verifyMerkleProof(CryptoUtil.bigIntToBytes32(commitment), BigInt(root).toString(), path)
-
-            // Pre check merkle proof before zk proof verification on smart contract
-            if (!merkleVerification) {
-                throw Boom.internal('Error: Invalid Merkle proof')
-            }
-
-            const withdrawalProof = await ZkSnark.createWithdrawalProof(
-                BigInt(noteObj.secret),
-                BigInt(noteObj.nullifier),
-                path.pathElements,
-                path.pathIndices,
-                leafIndex,
-                nullifierHash,
-                root,
-                currency,
-                amount,
-                receiver
+            const isCommitmentValid = await ethereumAintiVirusMixer.validateWithdrawlCommitments(
+                CryptoUtil.bigIntToBytes32(commitment)
             )
 
-            const tx = await aintiVirusMixer.withdraw(
-                root,
+            if (!isCommitmentValid) {
+                throw Boom.internal("Unknown commitment")
+            }
+
+            // Withdrawal commitments
+            const tx = await ethereumAintiVirusMixer.withdraw(
                 {
-                    pA: withdrawalProof.calldata.a,
-                    pB: withdrawalProof.calldata.b,
-                    pC: withdrawalProof.calldata.c,
-                    pubSignals: withdrawalProof.publicSignals.map(signal => signal.toString()) as [string, string, string, string, string, string, string, string, string, string]
+                    pA: noteObject.proof.calldata.a,
+                    pB: noteObject.proof.calldata.b,
+                    pC: noteObject.proof.calldata.c,
+                    pubSignals: noteObject.proof.calldata.psInput
                 },
                 receiver
             )
-
             await tx.wait()
 
             return {

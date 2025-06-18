@@ -3,7 +3,7 @@ export const MIXER_ABI = [
         "inputs": [
             {
                 "internalType": "address",
-                "name": "_depositVerifier",
+                "name": "_token",
                 "type": "address"
             },
             {
@@ -13,12 +13,7 @@ export const MIXER_ABI = [
             },
             {
                 "internalType": "address",
-                "name": "_hasher",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_relayer",
+                "name": "_operator",
                 "type": "address"
             }
         ],
@@ -45,106 +40,6 @@ export const MIXER_ABI = [
         ],
         "name": "AccessControlUnauthorizedAccount",
         "type": "error"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "commitment",
-                "type": "bytes32"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint32",
-                "name": "leafIndex",
-                "type": "uint32"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "timestamp",
-                "type": "uint256"
-            }
-        ],
-        "name": "CommitmentAddedForEthWithdrawal",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "commitment",
-                "type": "bytes32"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint32",
-                "name": "leafIndex",
-                "type": "uint32"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "timestamp",
-                "type": "uint256"
-            }
-        ],
-        "name": "DepositForSolWithdrawal",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "leaf",
-                "type": "bytes32"
-            },
-            {
-                "indexed": true,
-                "internalType": "uint32",
-                "name": "index",
-                "type": "uint32"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes32",
-                "name": "root",
-                "type": "bytes32"
-            }
-        ],
-        "name": "LeafInsertedETH",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "leaf",
-                "type": "bytes32"
-            },
-            {
-                "indexed": true,
-                "internalType": "uint32",
-                "name": "index",
-                "type": "uint32"
-            },
-            {
-                "indexed": false,
-                "internalType": "bytes32",
-                "name": "root",
-                "type": "bytes32"
-            }
-        ],
-        "name": "LeafInsertedSOL",
-        "type": "event"
     },
     {
         "anonymous": false,
@@ -236,19 +131,6 @@ export const MIXER_ABI = [
     },
     {
         "inputs": [],
-        "name": "FIELD_SIZE",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
         "name": "OPERATOR_ROLE",
         "outputs": [
             {
@@ -261,89 +143,11 @@ export const MIXER_ABI = [
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "ROOT_HISTORY_SIZE",
-        "outputs": [
-            {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "TREE_DEPTH",
-        "outputs": [
-            {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "ZERO_VALUE",
-        "outputs": [
+        "inputs": [
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "_mode",
                 "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "_commitment",
-                "type": "bytes32"
-            }
-        ],
-        "name": "addCommitmentForEthWithdrawal",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "currentRootIndexETH",
-        "outputs": [
-            {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "currentRootIndexSOL",
-        "outputs": [
-            {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_currency",
-                "type": "address"
             },
             {
                 "internalType": "uint256",
@@ -354,51 +158,11 @@ export const MIXER_ABI = [
                 "internalType": "bytes32",
                 "name": "_commitment",
                 "type": "bytes32"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "uint256[2]",
-                        "name": "pA",
-                        "type": "uint256[2]"
-                    },
-                    {
-                        "internalType": "uint256[2][2]",
-                        "name": "pB",
-                        "type": "uint256[2][2]"
-                    },
-                    {
-                        "internalType": "uint256[2]",
-                        "name": "pC",
-                        "type": "uint256[2]"
-                    },
-                    {
-                        "internalType": "uint256[5]",
-                        "name": "pubSignals",
-                        "type": "uint256[5]"
-                    }
-                ],
-                "internalType": "struct AintiVirusMixer.DepositProof",
-                "name": "_proof",
-                "type": "tuple"
             }
         ],
         "name": "deposit",
         "outputs": [],
         "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "depositVerifier",
-        "outputs": [
-            {
-                "internalType": "contract IDepositVerifier",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -409,7 +173,7 @@ export const MIXER_ABI = [
                 "type": "bytes32"
             }
         ],
-        "name": "ethKnownCommitments",
+        "name": "depositCommitments",
         "outputs": [
             {
                 "internalType": "bool",
@@ -423,20 +187,32 @@ export const MIXER_ABI = [
     {
         "inputs": [
             {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
+                "internalType": "address payable",
+                "name": "_addr",
+                "type": "address"
             }
         ],
-        "name": "ethUsedNullifiers",
-        "outputs": [
+        "name": "ew",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
             {
-                "internalType": "enum AintiVirusMixer.EthNullifierStatus",
-                "name": "",
-                "type": "uint8"
+                "internalType": "address",
+                "name": "_addr",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_t",
+                "type": "address"
             }
         ],
-        "stateMutability": "view",
+        "name": "ewt",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -447,70 +223,6 @@ export const MIXER_ABI = [
                 "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
-            }
-        ],
-        "name": "filledSubtreesETH",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
-            }
-        ],
-        "name": "filledSubtreesSOL",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "getLastETHRoot",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "getLastSOLRoot",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
             }
         ],
         "stateMutability": "view",
@@ -579,10 +291,10 @@ export const MIXER_ABI = [
     },
     {
         "inputs": [],
-        "name": "hasher",
+        "name": "mixToken",
         "outputs": [
             {
-                "internalType": "contract IPoseidon",
+                "internalType": "contract IERC20Metadata",
                 "name": "",
                 "type": "address"
             }
@@ -594,30 +306,11 @@ export const MIXER_ABI = [
         "inputs": [
             {
                 "internalType": "bytes32",
-                "name": "_root",
-                "type": "bytes32"
-            }
-        ],
-        "name": "isKnownETHRoot",
-        "outputs": [
-            {
-                "internalType": "bool",
                 "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "_root",
                 "type": "bytes32"
             }
         ],
-        "name": "isKnownSOLRoot",
+        "name": "nullifierHashes",
         "outputs": [
             {
                 "internalType": "bool",
@@ -630,38 +323,12 @@ export const MIXER_ABI = [
     },
     {
         "inputs": [],
-        "name": "levels",
+        "name": "operator",
         "outputs": [
             {
-                "internalType": "uint32",
+                "internalType": "address",
                 "name": "",
-                "type": "uint32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "nextIndexETH",
-        "outputs": [
-            {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "nextIndexSOL",
-        "outputs": [
-            {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
+                "type": "address"
             }
         ],
         "stateMutability": "view",
@@ -681,16 +348,16 @@ export const MIXER_ABI = [
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "relayer",
-        "outputs": [
+        "inputs": [
             {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
+                "internalType": "bytes32",
+                "name": "_commitment",
+                "type": "bytes32"
             }
         ],
-        "stateMutability": "view",
+        "name": "registerSolToEthCommitment",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -707,19 +374,6 @@ export const MIXER_ABI = [
             }
         ],
         "name": "renounceRole",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "_nullifierHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "revertNullifierForSolWithdrawal",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -745,50 +399,12 @@ export const MIXER_ABI = [
     {
         "inputs": [
             {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
+                "internalType": "uint256",
+                "name": "_fee",
+                "type": "uint256"
             }
         ],
-        "name": "rootsETH",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint32",
-                "name": "",
-                "type": "uint32"
-            }
-        ],
-        "name": "rootsSOL",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "_nullifierHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "setNullifierForSolWithdrawal",
+        "name": "setFee",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -796,39 +412,27 @@ export const MIXER_ABI = [
     {
         "inputs": [
             {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
+                "internalType": "address",
+                "name": "_operator",
+                "type": "address"
             }
         ],
-        "name": "solKnownCommitments",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
+        "name": "setOperator",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
         "inputs": [
             {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
+                "internalType": "uint256",
+                "name": "_refund",
+                "type": "uint256"
             }
         ],
-        "name": "solUsedNullifiers",
-        "outputs": [
-            {
-                "internalType": "enum AintiVirusMixer.SolNullifierStatus",
-                "name": "",
-                "type": "uint8"
-            }
-        ],
-        "stateMutability": "view",
+        "name": "setRefund",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -855,7 +459,7 @@ export const MIXER_ABI = [
         "name": "verifier",
         "outputs": [
             {
-                "internalType": "contract IWithdrawalVrifier",
+                "internalType": "contract IVerifier",
                 "name": "",
                 "type": "address"
             }
@@ -866,11 +470,6 @@ export const MIXER_ABI = [
     {
         "inputs": [
             {
-                "internalType": "bytes32",
-                "name": "_root",
-                "type": "bytes32"
-            },
-            {
                 "components": [
                     {
                         "internalType": "uint256[2]",
@@ -888,55 +487,9 @@ export const MIXER_ABI = [
                         "type": "uint256[2]"
                     },
                     {
-                        "internalType": "uint256[10]",
+                        "internalType": "uint256[5]",
                         "name": "pubSignals",
-                        "type": "uint256[10]"
-                    }
-                ],
-                "internalType": "struct AintiVirusMixer.WithdrawalProof",
-                "name": "_proof",
-                "type": "tuple"
-            }
-        ],
-        "name": "verifySolWithdrawal",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "verified_",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "_root",
-                "type": "bytes32"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "uint256[2]",
-                        "name": "pA",
-                        "type": "uint256[2]"
-                    },
-                    {
-                        "internalType": "uint256[2][2]",
-                        "name": "pB",
-                        "type": "uint256[2][2]"
-                    },
-                    {
-                        "internalType": "uint256[2]",
-                        "name": "pC",
-                        "type": "uint256[2]"
-                    },
-                    {
-                        "internalType": "uint256[10]",
-                        "name": "pubSignals",
-                        "type": "uint256[10]"
+                        "type": "uint256[5]"
                     }
                 ],
                 "internalType": "struct AintiVirusMixer.WithdrawalProof",
@@ -952,6 +505,25 @@ export const MIXER_ABI = [
         "name": "withdraw",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "name": "withdrawalCommitments",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
