@@ -3,7 +3,6 @@ import Boom from '@hapi/boom'
 import { ethers } from "ethers"
 import {
     Keypair,
-    Transaction,
     Connection,
     SystemProgram
 } from "@solana/web3.js"
