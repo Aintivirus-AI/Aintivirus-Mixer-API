@@ -21,6 +21,7 @@ import {
     ERC20Standard,
     SolanaAintiVirusMixer
 } from "../../core/contract-core"
+import { EnvManager } from '../../helper'
 // ** import local constants
 import { MIX_CONFIG } from "../../constant"
 import ENV from "../../constant/env"
@@ -57,15 +58,21 @@ class MixerController {
             const expiresAt = timestamp + expires
 
             // Define SDK and contract clients
-            const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
-            const erc20Standard = new ERC20Standard(MIX_CONFIG.ADDRESS.ETH_TOKEN, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+            const ETHEREUM_RPC_URL = await EnvManager.readEnvValues("ETHEREUM_RPC_URL")
+            const ETH_POOL_PRIVKEY = await EnvManager.readEnvValues("ETH_POOL_PRIVKEY")
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ETHEREUM_RPC_URL, ETH_POOL_PRIVKEY)
+            const erc20Standard = new ERC20Standard(MIX_CONFIG.ADDRESS.ETH_TOKEN, ETHEREUM_RPC_URL, ETH_POOL_PRIVKEY)
+            
             const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
-                ENV.SOLANA_RPC_URL,
-                ENV.SOL_POOL_PRIVKEY,
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
                 MIX_CONFIG.ADDRESS.SOL_TOKEN,
                 MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
             )
-            const solanaSDK = new SolanaSDK(ENV.SOL_POOL_PRIVKEY, ENV.SOLANA_RPC_URL)
+            const solanaSDK = new SolanaSDK(SOL_POOL_PRIVKEY, SOLANA_RPC_URL)
 
             // Define transaction related variables
             let amountInWei: bigint = 0n
@@ -204,11 +211,16 @@ class MixerController {
             const expiresAt = timestamp + expires
 
             // Define SDK and contract clients
-            const solanaSDK = new SolanaSDK(ENV.SOL_POOL_PRIVKEY, ENV.SOLANA_RPC_URL)
-            const erc20Standard = new ERC20Standard(MIX_CONFIG.ADDRESS.ETH_TOKEN, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+            const ETHEREUM_RPC_URL = await EnvManager.readEnvValues("ETHEREUM_RPC_URL")
+            const ETH_POOL_PRIVKEY = await EnvManager.readEnvValues("ETH_POOL_PRIVKEY")
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const solanaSDK = new SolanaSDK(SOL_POOL_PRIVKEY, SOLANA_RPC_URL)
+            const erc20Standard = new ERC20Standard(MIX_CONFIG.ADDRESS.ETH_TOKEN, ETHEREUM_RPC_URL, ETH_POOL_PRIVKEY)
             const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
-                ENV.SOLANA_RPC_URL,
-                ENV.SOL_POOL_PRIVKEY,
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
                 MIX_CONFIG.ADDRESS.SOL_TOKEN,
                 MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
             )
@@ -329,7 +341,11 @@ class MixerController {
             }
 
             // Validate transaction hash
-            const provider = new ethers.JsonRpcProvider(ENV.ETHEREUM_RPC_URL)
+            const ETHEREUM_RPC_URL = await EnvManager.readEnvValues("ETHEREUM_RPC_URL")
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const provider = new ethers.JsonRpcProvider(ETHEREUM_RPC_URL)
             const contractInterface = new ethers.Interface(MIXER_ABI)
             const tx = await provider.getTransaction(txHash)
             const receipt = await provider.getTransactionReceipt(txHash)
@@ -406,8 +422,8 @@ class MixerController {
             else {
                 // Register commitment to onchain program
                 const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
-                    ENV.SOLANA_RPC_URL,
-                    ENV.SOL_POOL_PRIVKEY,
+                    SOLANA_RPC_URL,
+                    SOL_POOL_PRIVKEY,
                     MIX_CONFIG.ADDRESS.SOL_TOKEN,
                     MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
                 )
@@ -479,9 +495,14 @@ class MixerController {
             }
 
             // Validate transaction hash
+            const ETHEREUM_RPC_URL = await EnvManager.readEnvValues("ETHEREUM_RPC_URL")
+            const ETH_POOL_PRIVKEY = await EnvManager.readEnvValues("ETH_POOL_PRIVKEY")
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
             const sessions = await sessionStore.readAll()
             const transactionIds = sessions.map((session: Session) => session.txHash)
-            const connection = new Connection(ENV.SOLANA_RPC_URL, 'confirmed')
+            const connection = new Connection(SOLANA_RPC_URL, 'confirmed')
 
             const tx1 = await connection.getTransaction(txHash, {
                 commitment: 'confirmed',
@@ -492,7 +513,7 @@ class MixerController {
             const compiledInstructions = message.compiledInstructions;
 
             const sender = accountKeys.get(0)?.toBase58(); // Usually fee payer
-            const operatorSOLWallet = Keypair.fromSecretKey(base58.decode(ENV.SOL_POOL_PRIVKEY))
+            const operatorSOLWallet = Keypair.fromSecretKey(base58.decode(SOL_POOL_PRIVKEY))
 
             if (!tx1) {
                 return {
@@ -645,7 +666,7 @@ class MixerController {
             }
             else {
                 // Register commitment to onchain program
-                const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ENV.ETHEREUM_RPC_URL, ENV.ETH_POOL_PRIVKEY)
+                const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ETHEREUM_RPC_URL, ETH_POOL_PRIVKEY)
                 const tx = await ethereumAintiVirusMixer.registerSolToEthCommitment(CryptoUtil.bigIntToBytes32(BigInt(session.commitment)))
                 await tx.wait()
 
@@ -693,9 +714,12 @@ class MixerController {
                 }
             }
 
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
             const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
-                ENV.SOLANA_RPC_URL,
-                ENV.SOL_POOL_PRIVKEY,
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
                 MIX_CONFIG.ADDRESS.SOL_TOKEN,
                 MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
             )
@@ -766,10 +790,13 @@ class MixerController {
                 }
             }
 
+            const ETHEREUM_RPC_URL = await EnvManager.readEnvValues("ETHEREUM_RPC_URL")
+            const ETH_POOL_PRIVKEY = await EnvManager.readEnvValues("ETH_POOL_PRIVKEY")
+
             const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(
                 MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS,
-                ENV.ETHEREUM_RPC_URL,
-                ENV.ETH_POOL_PRIVKEY
+                ETHEREUM_RPC_URL,
+                ETH_POOL_PRIVKEY
             )
 
             // Recover and verify commitment

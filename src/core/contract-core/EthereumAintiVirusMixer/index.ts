@@ -2,7 +2,7 @@ import { ContractTransaction, ethers } from "ethers";
 import axios from "axios";
 import { AintiVirusMixer as IAintiVirusMixer } from "../typechain-types"; // Adjust import path as necessary
 import { MIXER_ABI } from "../../../constant/abi/Mixer"; // Adjust import path as necessary
-import ENV from "../../../constant/env";
+import { EnvManager } from "../../../helper";
 
 // Interface for WithdrawalProof struct
 export interface WithdrawalProof {
@@ -157,8 +157,8 @@ export default class EthereumAintiVirusMixer {
 
     /**
      * Withdraws funds from the Ethereum Merkle tree
-     * @param root Merkle root
      * @param proof Withdrawal proof struct
+     * @param recipient Receipement address
      * @returns Transaction response
      */
     async withdraw(
@@ -388,8 +388,10 @@ export default class EthereumAintiVirusMixer {
     async getGasOverrides(txParams: ethers.ContractTransaction | ethers.TransactionRequest, speed: FeeSpeed): Promise<GasOverrides> {
         const gasLimit = await this.provider.estimateGas({...txParams, from: this.wallet.address});
         const chainId = (await this.provider.getNetwork()).chainId;
+        const INFURA_API_KEY = await EnvManager.readEnvValues("INFURA_API_KEY")
+        
         try {
-            const res = await axios.get(`https://gas.api.infura.io/v3/${ENV.INFURA_API_KEY}/networks/${chainId}/suggestedGasFees`);
+            const res = await axios.get(`https://gas.api.infura.io/v3/${INFURA_API_KEY}/networks/${chainId}/suggestedGasFees`);
             const data = await res.data;
             const suggestion = data[speed];
 

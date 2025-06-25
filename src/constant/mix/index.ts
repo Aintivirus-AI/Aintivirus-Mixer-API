@@ -3,7 +3,7 @@ const MIX_CONFIG = {
         /**
          * Mixer contract address
          */
-        MIXER_CONTRACT_ADDRESS: '0xD096168CD7DEf39142525024883f4d14f7c40476', // Mainnet
+        MIXER_CONTRACT_ADDRESS: '0x8adE00BEdC6234463f34d18bE2A6028DEbB4F530', // Mainnet
         // MIXER_CONTRACT_ADDRESS: '0xD096168CD7DEf39142525024883f4d14f7c40476', // Testnet
         MIXER_PROGRAM_ID: '7grL6oHWcuwdBNkqCUrz7JEoHeS5NXv1FDegDr6ViMBi',
 

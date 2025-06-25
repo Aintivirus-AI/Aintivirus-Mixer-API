@@ -13,6 +13,7 @@
   "keywords": [],
   "author": "",
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.830.0",
     "@hapi/boom": "^9.1.4",
     "@hapi/hapi": "^20.2.2",
     "@hapi/joi": "^17.0.2",

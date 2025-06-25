@@ -5,6 +5,7 @@ import { poseidon2 } from "poseidon-lite"
 // ** import custom libraries
 import { SolanaSDK } from "../../sdk"
 import { CryptoUtil } from "../../utils"
+import { EnvManager } from "../../helper"
 // ** import custom type
 import { ResponsePayload, RequestPayload } from "../../types"
 // ** import local constants
@@ -54,10 +55,10 @@ class DataController {
         }
     }
 
-
     static totalSupply = async (): Promise<number> => {
         try {
-            const connection = new Connection(ENV.SOLANA_RPC_URL)
+            const rpcUrl = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const connection = new Connection(rpcUrl)
             const mint = new PublicKey(`BAezfVmia8UYLt4rst6PCU4dvL2i2qHzqn4wGhytpNJW`)
             const mintInfo = await getMint(connection, mint)
 

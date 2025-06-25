@@ -11,7 +11,6 @@ import { ROUTER_V1 } from '../routes'
 // ** import app constants
 import { METHOD, ENDPOINT } from '../constant'
 
-
 class Server {
     // initialize Hapi server
     init = async () => {
