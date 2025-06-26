@@ -1,8 +1,9 @@
-import { ContractTransaction, ethers } from "ethers";
+import { ethers } from "ethers";
 import axios from "axios";
 import { AintiVirusMixer as IAintiVirusMixer } from "../typechain-types"; // Adjust import path as necessary
 import { MIXER_ABI } from "../../../constant/abi/Mixer"; // Adjust import path as necessary
 import { EnvManager } from "../../../helper";
+import ERC20Standard from "../ERC20Standard";
 
 // Interface for WithdrawalProof struct
 export interface WithdrawalProof {
@@ -378,6 +379,16 @@ export default class EthereumAintiVirusMixer {
             return tx;
         } catch (error) {
             throw error;
+        }
+    }
+
+    async getContractETHBalance() {
+        try {
+            const balance = await this.provider.getBalance(this.contractAddress)
+            return balance
+        }
+        catch(error) {
+            throw error
         }
     }
 

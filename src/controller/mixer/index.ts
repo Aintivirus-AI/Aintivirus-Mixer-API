@@ -24,7 +24,6 @@ import {
 import { EnvManager } from '../../helper'
 // ** import local constants
 import { MIX_CONFIG } from "../../constant"
-import ENV from "../../constant/env"
 import { MIXER_ABI } from "../../constant/abi/Mixer"
 
 class MixerController {
@@ -65,7 +64,7 @@ class MixerController {
 
             const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ETHEREUM_RPC_URL, ETH_POOL_PRIVKEY)
             const erc20Standard = new ERC20Standard(MIX_CONFIG.ADDRESS.ETH_TOKEN, ETHEREUM_RPC_URL, ETH_POOL_PRIVKEY)
-            
+
             const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
                 SOLANA_RPC_URL,
                 SOL_POOL_PRIVKEY,
@@ -103,6 +102,32 @@ class MixerController {
                     amount,
                     splTokenDecimals
                 )
+            }
+
+            // Check if escrow balance is enough for mixing at bridge mix
+            if (mixType === "BRIDGE") {
+                if (isNative) {
+                    const solanaProgramSolBalance = await solanaAintiVirusMixer.getProgramSolBalance()
+
+                    if (amountInLamport > solanaProgramSolBalance) {
+                        return {
+                            success: false,
+                            message: "Mixer storage has no enough SOL balance for mixing operation",
+                            data: {}
+                        }
+                    }
+                }
+                else {
+                    const solanaProgramTokenBalance = await solanaAintiVirusMixer.getProgramTokenBalance()
+
+                    if (amountInLamport > BigInt(solanaProgramTokenBalance.value.amount)) {
+                        return {
+                            success: false,
+                            message: "Mixer storage has no enough AINTI balance for mixing operation",
+                            data: {}
+                        }
+                    }
+                }
             }
 
             // Generate zksnark data
@@ -218,6 +243,7 @@ class MixerController {
 
             const solanaSDK = new SolanaSDK(SOL_POOL_PRIVKEY, SOLANA_RPC_URL)
             const erc20Standard = new ERC20Standard(MIX_CONFIG.ADDRESS.ETH_TOKEN, ETHEREUM_RPC_URL, ETH_POOL_PRIVKEY)
+            const ethereumAintiVirusMixer = new EthereumAintiVirusMixer(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS, ETHEREUM_RPC_URL, ETH_POOL_PRIVKEY)
             const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
                 SOLANA_RPC_URL,
                 SOL_POOL_PRIVKEY,
@@ -242,6 +268,30 @@ class MixerController {
 
                 amountInLamport = solanaAintiVirusMixer.splDecimalize(amount, splTokenDecimals)
                 amountInWei = ethers.parseUnits(amount.toFixed(3).toString(), erc20TokenDecimals)
+            }
+
+            // Check if escrow balance is enough for mixing at bridge mix
+            if (mixType === "BRIDGE") {
+                if (isNative) {
+                    const ethereumContractETHBalance = await ethereumAintiVirusMixer.getContractETHBalance()
+                    if (amountInWei > ethereumContractETHBalance) {
+                        return {
+                            success: false,
+                            message: "Mixer storage has no enough ETH for mixing operation",
+                            data: {}
+                        }
+                    }
+                }
+                else {
+                    const ethereumContractTokenBalance = await erc20Standard.balanceOf(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS)
+                    if(amountInWei > ethereumContractTokenBalance) {
+                        return {
+                            success: false,
+                            message: "Mixer storage has no enough AINTI for mixing operation",
+                            data: {}
+                        }
+                    }
+                }
             }
 
             // Generate zksnark data
@@ -451,11 +501,11 @@ class MixerController {
             await sessionStore.update(sessionId, { zkSecret: '', secret: '', nullifier: '', commitment: '' })
             await sessionStore.close()
 
-            return { 
+            return {
                 success: true,
-                data: { 
-                    note 
-                } 
+                data: {
+                    note
+                }
             }
         }
         catch (error) {
@@ -684,11 +734,11 @@ class MixerController {
             await sessionStore.update(sessionId, { zkSecret: '', secret: '', nullifier: '', commitment: '' })
             await sessionStore.close()
 
-            return { 
+            return {
                 success: true,
-                data: { 
-                    note 
-                } 
+                data: {
+                    note
+                }
             }
         }
         catch (error) {

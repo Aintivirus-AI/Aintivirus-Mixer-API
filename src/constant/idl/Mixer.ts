@@ -41,7 +41,16 @@ export const MIXER_IDL = {
                     "isSigner": false
                 }
             ],
-            "args": []
+            "args": [
+                {
+                    "name": "feeCollector",
+                    "type": "publicKey"
+                },
+                {
+                    "name": "feeCollectorAta",
+                    "type": "publicKey"
+                }
+            ]
         },
         {
             "name": "chargeTokenEscrow",
@@ -222,11 +231,6 @@ export const MIXER_IDL = {
                     "isSigner": true
                 },
                 {
-                    "name": "signer",
-                    "isMut": true,
-                    "isSigner": true
-                },
-                {
                     "name": "mixStorage",
                     "isMut": true,
                     "isSigner": false
@@ -283,6 +287,16 @@ export const MIXER_IDL = {
                     "isSigner": false
                 },
                 {
+                    "name": "feeCollector",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "feeCollectorAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "mint",
                     "isMut": false,
                     "isSigner": false,
@@ -326,6 +340,115 @@ export const MIXER_IDL = {
                             32
                         ]
                     }
+                }
+            ]
+        },
+        {
+            "name": "setFeeCollector",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "feeCollector",
+                    "type": "publicKey"
+                },
+                {
+                    "name": "feeCollectorAta",
+                    "type": "publicKey"
+                }
+            ]
+        },
+        {
+            "name": "setRefund",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "refund",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "setFee",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "fee",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "setMinSolDeposit",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "minSolDeposit",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "setMinTokenDeposit",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "minTokenDeposit",
+                    "type": "u64"
                 }
             ]
         },
@@ -382,6 +505,30 @@ export const MIXER_IDL = {
                     {
                         "name": "maintainer",
                         "type": "publicKey"
+                    },
+                    {
+                        "name": "minSolDeposit",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "minTokenDeposit",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "feeCollector",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "feeCollectorAta",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "refund",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "fee",
+                        "type": "u64"
                     }
                 ]
             }
@@ -432,9 +579,11 @@ export const MIXER_IDL = {
             "code": 6008,
             "name": "FailedToParsePublicInputs",
             "msg": "Failed to parse public inputs"
+        },
+        {
+            "code": 6009,
+            "name": "InvalidEscrowVault",
+            "msg": "Invalid escrow vault account"
         }
-    ],
-    "metadata": {
-        "address": "9dkriTcrFcH9NPXMFEdGuT1z1kwsDAkzLaBgDuLond3A"
-    }
+    ]
 }

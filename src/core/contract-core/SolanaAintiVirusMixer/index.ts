@@ -15,13 +15,13 @@ import { MIXER_IDL } from '../../../constant/idl/Mixer'
 import { AintivirusMixer as IAintiVirusMixer } from '../anchor-types/AintiVirusMixer'
 
 export default class SolanaAintiVirusMixer {
-    privateKey: string
-    mint: PublicKey
-    connection: anchor.web3.Connection
-    signer: Keypair
-    program: Program<IAintiVirusMixer>
-    provider: anchor.AnchorProvider
-    pda = {} as {
+    private readonly privateKey: string
+    private readonly mint: PublicKey
+    private readonly connection: anchor.web3.Connection
+    private readonly signer: Keypair
+    private readonly program: Program<IAintiVirusMixer>
+    private readonly provider: anchor.AnchorProvider
+    private readonly pda = {} as {
         mixStorage: PublicKey
         escrowVault: PublicKey
         escrowVaultForSol: PublicKey
@@ -113,7 +113,6 @@ export default class SolanaAintiVirusMixer {
             const commitmentU8Array = ZkSolana.bigintToU8Array32(commitment)
             const txSig = await this.program.methods.registerEthSolCommitment(commitmentU8Array).accounts({
                 authority: this.signer.publicKey,
-                signer: this.signer.publicKey,
                 mixStorage: this.pda.mixStorage
             }).rpc({ commitment: "confirmed" })
 
@@ -148,6 +147,7 @@ export default class SolanaAintiVirusMixer {
                 new PublicKey(to)
             )
 
+            const mixStorageData = (await this.program.account.mixStorage.all())[0].account
             const calldata = await ZkSolana.toSolanaCalldata(proof, publicSignals)
             const txSig = await this.program.methods.withdraw(Buffer.from(calldata)).accounts({
                 to,
@@ -157,12 +157,35 @@ export default class SolanaAintiVirusMixer {
                 mint: this.mint,
                 escrowVault: this.pda.escrowVault,
                 escrowVaultForSol: this.pda.escrowVaultForSol,
-                mixStorage: this.pda.mixStorage
+                mixStorage: this.pda.mixStorage,
+                feeCollector: mixStorageData.feeCollector,
+                feeCollectorAta: mixStorageData.feeCollectorAta
             }).rpc({ commitment: "confirmed" })
 
             return txSig
         }
         catch (error) {
+            throw error
+        }
+    }
+
+    async getProgramSolBalance(): Promise<number> {
+        try {
+            const balance = await this.connection.getBalance(this.pda.escrowVaultForSol)
+            return balance
+        }
+        catch(error) {
+            throw error
+        }
+    }
+
+    async getProgramTokenBalance(): Promise<anchor.web3.RpcResponseAndContext<anchor.web3.TokenAmount>> {
+        try {
+            const balance = await this.connection.getTokenAccountBalance(this.pda.escrowVault)
+            console.log(this.pda.escrowVault)
+            return balance
+        }
+        catch(error) {
             throw error
         }
     }

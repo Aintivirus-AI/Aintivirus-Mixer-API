@@ -8,8 +8,6 @@ import { CryptoUtil } from "../../utils"
 import { EnvManager } from "../../helper"
 // ** import custom type
 import { ResponsePayload, RequestPayload } from "../../types"
-// ** import local constants
-import ENV from "../../constant/env"
 
 class DataController {
     /**
