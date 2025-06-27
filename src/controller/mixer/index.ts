@@ -105,30 +105,30 @@ class MixerController {
             }
 
             // Check if escrow balance is enough for mixing at bridge mix
-            if (mixType === "BRIDGE") {
-                if (isNative) {
-                    const solanaProgramSolBalance = await solanaAintiVirusMixer.getProgramSolBalance()
+            // if (mixType === "BRIDGE") {
+            //     if (isNative) {
+            //         const solanaProgramSolBalance = await solanaAintiVirusMixer.getProgramSolBalance()
 
-                    if (amountInLamport > solanaProgramSolBalance) {
-                        return {
-                            success: false,
-                            message: "Mixer storage has no enough SOL balance for mixing operation",
-                            data: {}
-                        }
-                    }
-                }
-                else {
-                    const solanaProgramTokenBalance = await solanaAintiVirusMixer.getProgramTokenBalance()
+            //         if (amountInLamport > solanaProgramSolBalance) {
+            //             return {
+            //                 success: false,
+            //                 message: "Mixer storage has no enough SOL balance for mixing operation",
+            //                 data: {}
+            //             }
+            //         }
+            //     }
+            //     else {
+            //         const solanaProgramTokenBalance = await solanaAintiVirusMixer.getProgramTokenBalance()
 
-                    if (amountInLamport > BigInt(solanaProgramTokenBalance.value.amount)) {
-                        return {
-                            success: false,
-                            message: "Mixer storage has no enough AINTI balance for mixing operation",
-                            data: {}
-                        }
-                    }
-                }
-            }
+            //         if (amountInLamport > BigInt(solanaProgramTokenBalance.value.amount)) {
+            //             return {
+            //                 success: false,
+            //                 message: "Mixer storage has no enough AINTI balance for mixing operation",
+            //                 data: {}
+            //             }
+            //         }
+            //     }
+            // }
 
             // Generate zksnark data
             const { secret, nullifier } = ZkSnark.generateSecretAndNullifier()
@@ -271,28 +271,28 @@ class MixerController {
             }
 
             // Check if escrow balance is enough for mixing at bridge mix
-            if (mixType === "BRIDGE") {
-                if (isNative) {
-                    const ethereumContractETHBalance = await ethereumAintiVirusMixer.getContractETHBalance()
-                    if (amountInWei > ethereumContractETHBalance) {
-                        return {
-                            success: false,
-                            message: "Mixer storage has no enough ETH for mixing operation",
-                            data: {}
-                        }
-                    }
-                }
-                else {
-                    const ethereumContractTokenBalance = await erc20Standard.balanceOf(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS)
-                    if(amountInWei > ethereumContractTokenBalance) {
-                        return {
-                            success: false,
-                            message: "Mixer storage has no enough AINTI for mixing operation",
-                            data: {}
-                        }
-                    }
-                }
-            }
+            // if (mixType === "BRIDGE") {
+            //     if (isNative) {
+            //         const ethereumContractETHBalance = await ethereumAintiVirusMixer.getContractETHBalance()
+            //         if (amountInWei > ethereumContractETHBalance) {
+            //             return {
+            //                 success: false,
+            //                 message: "Mixer storage has no enough ETH for mixing operation",
+            //                 data: {}
+            //             }
+            //         }
+            //     }
+            //     else {
+            //         const ethereumContractTokenBalance = await erc20Standard.balanceOf(MIX_CONFIG.ADDRESS.MIXER_CONTRACT_ADDRESS)
+            //         if(amountInWei > ethereumContractTokenBalance) {
+            //             return {
+            //                 success: false,
+            //                 message: "Mixer storage has no enough AINTI for mixing operation",
+            //                 data: {}
+            //             }
+            //         }
+            //     }
+            // }
 
             // Generate zksnark data
             const { secret, nullifier } = ZkSnark.generateSecretAndNullifier()
