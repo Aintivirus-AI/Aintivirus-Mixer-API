@@ -906,6 +906,205 @@ class MixerController {
             throw Boom.internal((error as Error).message, { originalError: error });
         }
     }
+
+    static setMaintainer = async (payload: RequestPayload): Promise<ResponsePayload> => {
+        try {
+            const { maintainer, signer } = payload
+
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
+
+            const transaction = await solanaAintiVirusMixer.populateMaintainerSetTransaction(maintainer, signer)
+
+            return {
+                success: true,
+                data: {
+                    transaction
+                }
+            }
+        }
+        catch(error) {
+            console.error(error)
+            throw Boom.internal((error as Error).message, { originalError: error });
+        }
+    }
+
+    static setFeeCollector = async (payload: RequestPayload): Promise<ResponsePayload> => {
+        try {
+            const { feeCollector, signer } = payload
+
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
+
+            const transaction = await solanaAintiVirusMixer.populateFeeCollectorSetTransaction(feeCollector, signer)
+
+            return {
+                success: true,
+                data: {
+                    transaction
+                }
+            }
+
+        }
+        catch(error) {
+            console.error(error)
+            throw Boom.internal((error as Error).message, { originalError: error });
+        }
+    }
+
+    static setRefund = async (payload: RequestPayload): Promise<ResponsePayload> => {
+        try {
+            const { refund, signer } = payload
+
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
+
+            const transaction = await solanaAintiVirusMixer.populateRefundSetTransaction(refund, signer)
+
+            return {
+                success: true,
+                data: {
+                    transaction
+                }
+            }
+        }
+        catch(error) {
+            console.error(error)
+            throw Boom.internal((error as Error).message, { originalError: error });
+        }
+    }
+
+    static setFee = async (payload: RequestPayload): Promise<ResponsePayload> => {
+        try {
+            const { fee, signer } = payload
+
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
+
+            const transaction = await solanaAintiVirusMixer.populateFeeSetTransaction(fee, signer)
+
+            return {
+                success: true,
+                data: {
+                    transaction
+                }
+            }
+        }
+        catch(error) {
+            console.error(error)
+            throw Boom.internal((error as Error).message, { originalError: error });
+        }
+    }
+
+    static setMinSolDepositAmount = async (payload: RequestPayload): Promise<ResponsePayload> => {
+        try {
+            const { minAmount, signer } = payload
+
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
+
+            const transaction = await solanaAintiVirusMixer.populateMinSolDepositAmountSetTransaction(minAmount, signer)
+
+            return {
+                success: true,
+                data: {
+                    transaction
+                }
+            }
+        }
+        catch(error) {
+            console.error(error)
+            throw Boom.internal((error as Error).message, { originalError: error });
+        }
+    }
+
+    static setMinTokenDepositAmount = async (payload: RequestPayload): Promise<ResponsePayload> => {
+        try {
+            const { minAmount, signer } = payload
+
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
+
+            const transaction = await solanaAintiVirusMixer.populateMinTokenDepositAmountSetTransaction(minAmount, signer)
+
+            return {
+                success: true,
+                data: {
+                    transaction
+                }
+            }
+        }
+        catch(error) {
+            console.error(error)
+            throw Boom.internal((error as Error).message, { originalError: error });
+        }
+    }
+
+    static getSolMixerStorageData = async (): Promise<ResponsePayload> => {
+        try {
+            const SOLANA_RPC_URL = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const SOL_POOL_PRIVKEY = await EnvManager.readEnvValues("SOL_POOL_PRIVKEY")
+
+            const solanaAintiVirusMixer = new SolanaAintiVirusMixer(
+                SOLANA_RPC_URL,
+                SOL_POOL_PRIVKEY,
+                MIX_CONFIG.ADDRESS.SOL_TOKEN,
+                MIX_CONFIG.ADDRESS.MIXER_PROGRAM_ID
+            )
+
+            const data = await solanaAintiVirusMixer.getMixStorageData()
+
+            return {
+                success: true,
+                data
+            }
+        }
+        catch(error) {
+            throw error
+        }
+    }
 }
 
 export default MixerController

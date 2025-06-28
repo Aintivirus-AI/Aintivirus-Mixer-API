@@ -2,7 +2,12 @@
 import * as anchor from "@project-serum/anchor"
 import { Program, Idl } from "@project-serum/anchor"
 import { PublicKey, Keypair, Transaction } from "@solana/web3.js"
-import { getOrCreateAssociatedTokenAccount, TOKEN_PROGRAM_ID } from "@solana/spl-token"
+import { 
+    getOrCreateAssociatedTokenAccount, 
+    TOKEN_PROGRAM_ID, 
+    getAssociatedTokenAddress, 
+    createAssociatedTokenAccountInstruction 
+} from "@solana/spl-token"
 import bs58 from 'bs58'
 import { ethers } from 'ethers'
 
@@ -108,6 +113,109 @@ export default class SolanaAintiVirusMixer {
         }
     }
 
+    async populateMaintainerSetTransaction(maintainer: string, signer: string): Promise<Transaction> {
+        try {
+            return this.program.methods.setMaintainer(new PublicKey(maintainer)).accounts({
+                authority: signer,
+                mixStorage: this.pda.mixStorage
+            }).transaction()
+        }
+        catch (error) {
+            throw error
+        }
+    }
+
+    async populateFeeCollectorSetTransaction(feeCollector: string, signer: string): Promise<Transaction> {
+        try {
+            // Get associated token account address
+            const feeCollectorAta = await getAssociatedTokenAddress(this.mint, new PublicKey(feeCollector));
+            // Check if the ATA exists
+            const ataAccountInfo = this.connection.getAccountInfo(feeCollectorAta)
+
+            // Prepare transaction
+            const transaction = new Transaction()
+
+            if (!ataAccountInfo) {
+                const createAtaIx = createAssociatedTokenAccountInstruction(
+                    new PublicKey(signer),  // payer
+                    feeCollectorAta,        // ata to be created
+                    new PublicKey(feeCollector),         // owner of ATA
+                    this.mint               // token mint
+                );
+                transaction.add(createAtaIx);
+            }
+
+            const setFeeCollectorTx =  await this.program.methods.setFeeCollector(
+                new PublicKey(feeCollector),
+                feeCollectorAta
+            ).accounts({
+                authority: signer,
+                mixStorage: this.pda.mixStorage
+            }).transaction()
+
+            transaction.add(setFeeCollectorTx)
+
+            return transaction
+        }
+        catch (error) {
+            throw error
+        }
+    }
+
+    async populateRefundSetTransaction(refund: number, signer: string): Promise<Transaction> {
+        try {
+            return this.program.methods.setRefund(this.splDecimalize(refund)).accounts({
+                authority: signer,
+                mixStorage: this.pda.mixStorage
+            }).transaction()
+        }
+        catch(error) {
+            throw error
+        }
+    }
+
+    async populateFeeSetTransaction(fee: number, signer: string): Promise<Transaction> {
+        try {
+            const sdk = new SolanaSDK(this.privateKey, this.connection.rpcEndpoint)
+            const decimals = await sdk.getTokenDecimals(this.mint.toBase58())
+
+            return this.program.methods.setFee(this.splDecimalize(fee, decimals)).accounts({
+                authority: signer,
+                mixStorage: this.pda.mixStorage
+            }).transaction()
+        }
+        catch(error) {
+            throw error
+        }
+    }
+
+    async populateMinSolDepositAmountSetTransaction(minAmount: number, signer: string): Promise<Transaction> {
+        try {
+            return this.program.methods.setMinSolDeposit(this.splDecimalize(minAmount)).accounts({
+                authority: signer,
+                mixStorage: this.pda.mixStorage
+            }).transaction()
+        }
+        catch(error) {
+            throw error
+        }
+    }
+
+    async populateMinTokenDepositAmountSetTransaction(minAmount: number, signer: string): Promise<Transaction> {
+        try {
+            const sdk = new SolanaSDK(this.privateKey, this.connection.rpcEndpoint)
+            const decimals = await sdk.getTokenDecimals(this.mint.toBase58())
+
+            return this.program.methods.setMinTokenDeposit(this.splDecimalize(minAmount, decimals)).accounts({
+                authority: signer,
+                mixStorage: this.pda.mixStorage
+            }).transaction()
+        }
+        catch(error) {
+            throw error
+        }
+    }
+
     async registerEthSolCommitment(commitment: bigint): Promise<string> {
         try {
             const commitmentU8Array = ZkSolana.bigintToU8Array32(commitment)
@@ -174,7 +282,7 @@ export default class SolanaAintiVirusMixer {
             const balance = await this.connection.getBalance(this.pda.escrowVaultForSol)
             return balance
         }
-        catch(error) {
+        catch (error) {
             throw error
         }
     }
@@ -184,6 +292,33 @@ export default class SolanaAintiVirusMixer {
             const balance = await this.connection.getTokenAccountBalance(this.pda.escrowVault)
             console.log(this.pda.escrowVault)
             return balance
+        }
+        catch (error) {
+            throw error
+        }
+    }
+
+    async getMixStorageData(): Promise<{
+        maintainer: PublicKey,
+        feeCollector: PublicKey,
+        refund: number,
+        fee: number,
+        minSolDepositAmount: number,
+        minTokenDepositAmount: number
+    }> {
+        try {
+            const sdk = new SolanaSDK(this.privateKey, this.connection.rpcEndpoint)
+            const decimals = await sdk.getTokenDecimals(this.mint.toBase58())
+
+            const mixStorageData  = (await this.program.account.mixStorage.all())[0].account
+            return {
+                maintainer: mixStorageData.maintainer,
+                feeCollector: mixStorageData.feeCollector,
+                refund: this.deSplDecimalize(mixStorageData.refund),
+                fee: this.deSplDecimalize(mixStorageData.fee, decimals),
+                minSolDepositAmount: this.deSplDecimalize(mixStorageData.minSolDeposit),
+                minTokenDepositAmount: this.deSplDecimalize(mixStorageData.minTokenDeposit, decimals)
+            }
         }
         catch(error) {
             throw error

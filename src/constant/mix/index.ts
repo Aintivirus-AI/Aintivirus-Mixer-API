@@ -5,7 +5,7 @@ const MIX_CONFIG = {
          */
         MIXER_CONTRACT_ADDRESS: '0xcAfe510F5E5d5712Bc8514C12FfCfb8d4928443f', // Mainnet
         // MIXER_CONTRACT_ADDRESS: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0', // Testnet
-        MIXER_PROGRAM_ID: '428L2unZJtHemoLLtaEAotJGk1Hkoj6nHp5tDUpmKJMw',
+        MIXER_PROGRAM_ID: '428L2unZJtHemoLLtaEAotJGk1Hkoj6nHp5tDUpmKJMw', //Mainnet/Testnet
 
         /**
          * Mix token address

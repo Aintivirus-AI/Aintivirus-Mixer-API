@@ -453,6 +453,27 @@ export const MIXER_IDL = {
             ]
         },
         {
+            "name": "setMaintainer",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "maintainer",
+                    "type": "publicKey"
+                }
+            ]
+        },
+        {
             "name": "verifyProofTest",
             "accounts": [
                 {
@@ -585,5 +606,8 @@ export const MIXER_IDL = {
             "name": "InvalidEscrowVault",
             "msg": "Invalid escrow vault account"
         }
-    ]
+    ],
+    "metadata": {
+        "address": "428L2unZJtHemoLLtaEAotJGk1Hkoj6nHp5tDUpmKJMw"
+    }
 }
