@@ -207,6 +207,51 @@ const PRIVATE_ROUTER: Hapi.ServerRoute[] = [
             }
         }
     },
+    {
+        method: METHOD.POST,
+        path: VERSION.V1 + ENDPOINT.POST.SEND_TRANSACTION,
+        options: {
+            cors: CORS_CONFIG,
+            handler: async (request, reply) => {
+                try {
+                    const response = await DataController.sendTransaction(request.payload)
+
+                    return ResponseUtil.sendResponse(response, reply)
+                }
+                catch (error) {
+                    console.error(error)
+                    return Object(error)
+                }
+            },
+            validate: {
+                failAction: ResponseUtil.failAction,
+                payload: Joi.object({
+                    transaction: Joi.object().required(),
+                })
+            }
+        }
+    },
+    {
+        method: METHOD.POST,
+        path: VERSION.V1 + ENDPOINT.POST.GET_LATEST_BLOCK,
+        options: {
+            cors: CORS_CONFIG,
+            handler: async (request, reply) => {
+                try {
+                    const response = await DataController.getLatestBlock()
+
+                    return ResponseUtil.sendResponse(response, reply)
+                }
+                catch (error) {
+                    console.error(error)
+                    return Object(error)
+                }
+            },
+            validate: {
+                failAction: ResponseUtil.failAction
+            }
+        }
+    },
 ]
 
 export default PRIVATE_ROUTER

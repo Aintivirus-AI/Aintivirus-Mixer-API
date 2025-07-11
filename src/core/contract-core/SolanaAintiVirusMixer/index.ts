@@ -1,12 +1,12 @@
 // ** import external library
 import * as anchor from "@project-serum/anchor"
 import { Program, Idl } from "@project-serum/anchor"
-import { PublicKey, Keypair, Transaction } from "@solana/web3.js"
-import { 
-    getOrCreateAssociatedTokenAccount, 
-    TOKEN_PROGRAM_ID, 
-    getAssociatedTokenAddress, 
-    createAssociatedTokenAccountInstruction 
+import { PublicKey, Keypair, Transaction, ComputeBudgetProgram, sendAndConfirmTransaction } from "@solana/web3.js"
+import {
+    getOrCreateAssociatedTokenAccount,
+    TOKEN_PROGRAM_ID,
+    getAssociatedTokenAddress,
+    createAssociatedTokenAccountInstruction
 } from "@solana/spl-token"
 import bs58 from 'bs58'
 import { ethers } from 'ethers'
@@ -145,7 +145,7 @@ export default class SolanaAintiVirusMixer {
                 transaction.add(createAtaIx);
             }
 
-            const setFeeCollectorTx =  await this.program.methods.setFeeCollector(
+            const setFeeCollectorTx = await this.program.methods.setFeeCollector(
                 new PublicKey(feeCollector),
                 feeCollectorAta
             ).accounts({
@@ -169,7 +169,7 @@ export default class SolanaAintiVirusMixer {
                 mixStorage: this.pda.mixStorage
             }).transaction()
         }
-        catch(error) {
+        catch (error) {
             throw error
         }
     }
@@ -184,7 +184,7 @@ export default class SolanaAintiVirusMixer {
                 mixStorage: this.pda.mixStorage
             }).transaction()
         }
-        catch(error) {
+        catch (error) {
             throw error
         }
     }
@@ -196,7 +196,7 @@ export default class SolanaAintiVirusMixer {
                 mixStorage: this.pda.mixStorage
             }).transaction()
         }
-        catch(error) {
+        catch (error) {
             throw error
         }
     }
@@ -211,7 +211,7 @@ export default class SolanaAintiVirusMixer {
                 mixStorage: this.pda.mixStorage
             }).transaction()
         }
-        catch(error) {
+        catch (error) {
             throw error
         }
     }
@@ -257,7 +257,8 @@ export default class SolanaAintiVirusMixer {
 
             const mixStorageData = (await this.program.account.mixStorage.all())[0].account
             const calldata = await ZkSolana.toSolanaCalldata(proof, publicSignals)
-            const txSig = await this.program.methods.withdraw(Buffer.from(calldata)).accounts({
+            // Build the Anchor instruction manually
+            const ix = await this.program.methods.withdraw(Buffer.from(calldata)).accounts({
                 to,
                 toAta: toAta.address,
                 authority: this.signer.publicKey,
@@ -268,7 +269,30 @@ export default class SolanaAintiVirusMixer {
                 mixStorage: this.pda.mixStorage,
                 feeCollector: mixStorageData.feeCollector,
                 feeCollectorAta: mixStorageData.feeCollectorAta
-            }).rpc({ commitment: "confirmed" })
+            }).instruction()
+
+            // Create compute budget instructions
+            const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
+                units: 1_400_000, // Max allowed per Solana
+            });
+
+            const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+                microLamports: 1, // Optional, you can omit this if not prioritizing
+            });
+
+            // Build transaction
+            const tx = new Transaction();
+            tx.add(computePriceIx);
+            tx.add(computeLimitIx);
+            tx.add(ix);
+
+            // Send transaction
+            const txSig = await sendAndConfirmTransaction(
+                this.connection,
+                tx,
+                [this.signer],
+                { commitment: "confirmed" }
+            )
 
             return txSig
         }
@@ -310,7 +334,7 @@ export default class SolanaAintiVirusMixer {
             const sdk = new SolanaSDK(this.privateKey, this.connection.rpcEndpoint)
             const decimals = await sdk.getTokenDecimals(this.mint.toBase58())
 
-            const mixStorageData  = (await this.program.account.mixStorage.all())[0].account
+            const mixStorageData = (await this.program.account.mixStorage.all())[0].account
             return {
                 maintainer: mixStorageData.maintainer,
                 feeCollector: mixStorageData.feeCollector,
@@ -320,7 +344,7 @@ export default class SolanaAintiVirusMixer {
                 minTokenDepositAmount: this.deSplDecimalize(mixStorageData.minTokenDeposit, decimals)
             }
         }
-        catch(error) {
+        catch (error) {
             throw error
         }
     }

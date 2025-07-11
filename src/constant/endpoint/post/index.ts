@@ -17,7 +17,9 @@ const POST = {
     SET_SOL_REFUND: '/set-sol-refund',
     SET_SOL_FEE: '/set-sol-fee',
     SET_SOL_MINDEPOSIT: '/set-sol-mindeposit',
-    SET_SOL_MINTOKENDEPOSIT: '/set-sol-mintokendeposit'
+    SET_SOL_MINTOKENDEPOSIT: '/set-sol-mintokendeposit',
+    SEND_TRANSACTION: '/send-transaction',
+    GET_LATEST_BLOCK: '/get-latest-block'
 }
 
 export default POST

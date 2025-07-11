@@ -1,5 +1,5 @@
 // ** import external libraries
-import { Connection, PublicKey } from "@solana/web3.js"
+import { Connection, PublicKey, sendAndConfirmRawTransaction, sendAndConfirmTransaction } from "@solana/web3.js"
 import { getMint } from "@solana/spl-token"
 import { poseidon2 } from "poseidon-lite"
 // ** import custom libraries
@@ -53,6 +53,10 @@ class DataController {
         }
     }
 
+    /**
+     * 
+     * @returns {String}
+     */
     static totalSupply = async (): Promise<number> => {
         try {
             const rpcUrl = await EnvManager.readEnvValues("SOLANA_RPC_URL")
@@ -63,6 +67,59 @@ class DataController {
             const totalSupply = await SolanaSDK.deSplDecimalize(mintInfo.supply, mintInfo.decimals)
 
             return totalSupply
+        }
+        catch(error) {
+            console.error(error)
+            throw error
+        }
+    }
+
+    /**
+     * 
+     * @returns {ResponsePayload}
+     */
+    static getLatestBlock = async (): Promise<ResponsePayload> => {
+        try {
+            const rpcUrl = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const connection = new Connection(rpcUrl)
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed")
+        
+            return {
+                data: {
+                    blockhash,
+                    lastValidBlockHeight
+                }
+            }
+        }
+        catch(error) {
+            throw error
+        }
+    }
+
+    /**
+     * 
+     * @param {RequestPayload} payload 
+     * @returns {ResponsePayload}
+     */
+    static sendTransaction = async (payload: RequestPayload): Promise<ResponsePayload> => {
+        try {
+            const { transaction } = payload
+
+            console.log(transaction)
+
+            const rpcUrl = await EnvManager.readEnvValues("SOLANA_RPC_URL")
+            const connection = new Connection(rpcUrl)
+
+            const txSig = await sendAndConfirmRawTransaction(connection, transaction, {
+                skipPreflight: false,
+                preflightCommitment: "confirmed"
+            })
+            
+            return {
+                data: {
+                    txSig
+                }
+            }
         }
         catch(error) {
             console.error(error)

@@ -8,7 +8,6 @@ package-lock.json
 
 *.env
 
-
 src/store/db/session_store.db
 
 src/zksnark
