@@ -795,16 +795,16 @@ class MixerController {
                 publicSignals[2]
             )
 
-            // try {
-            //     await solanaAintiVirusMixer.validateCommitment(commitment)
-            // }
-            // catch {
-            //     return {
-            //         success: false,
-            //         message: "Unknown commitment",
-            //         data: {}
-            //     }
-            // }
+            try {
+                await solanaAintiVirusMixer.validateCommitment(commitment)
+            }
+            catch {
+                return {
+                    success: false,
+                    message: "Unknown commitment",
+                    data: {}
+                }
+            }
 
             // Withdrawal process
             const txSig = await solanaAintiVirusMixer.withdraw(receiver, noteObject.proof.proof, noteObject.proof.publicSignals)

@@ -764,6 +764,68 @@ export type AintivirusMixer = {
                     "type": "u64"
                 }
             ]
+        },
+        {
+            "name": "validateCommitment2",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "commitment",
+                    "type": {
+                        "array": [
+                            "u8",
+                            32
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "registerEthSolCommitment2",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "commitment",
+                    "type": {
+                        "array": [
+                            "u8",
+                            32
+                        ]
+                    }
+                }
+            ]
         }
     ],
     "accounts": [
@@ -1674,6 +1736,68 @@ export const IDL: AintivirusMixer = {
                 {
                     "name": "newSize",
                     "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "validateCommitment2",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "commitment",
+                    "type": {
+                        "array": [
+                            "u8",
+                            32
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "registerEthSolCommitment2",
+            "accounts": [
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "commitment",
+                    "type": {
+                        "array": [
+                            "u8",
+                            32
+                        ]
+                    }
                 }
             ]
         }

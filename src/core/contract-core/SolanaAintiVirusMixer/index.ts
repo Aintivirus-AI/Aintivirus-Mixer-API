@@ -248,9 +248,10 @@ export default class SolanaAintiVirusMixer {
     async registerEthSolCommitment(commitment: bigint): Promise<string> {
         try {
             const commitmentU8Array = ZkSolana.bigintToU8Array32(commitment)
-            const txSig = await this.program.methods.registerEthSolCommitment(commitmentU8Array).accounts({
+            const txSig = await this.program.methods.registerEthSolCommitment2(commitmentU8Array).accounts({
                 authority: this.signer.publicKey,
-                mixStorage: this.pda.mixStorage
+                mixStorage: this.pda.mixStorage,
+                mixStorage2: this.pda.mixStorage2
             }).rpc({ commitment: "confirmed" })
 
             return txSig
@@ -263,9 +264,10 @@ export default class SolanaAintiVirusMixer {
     async validateCommitment(commitment: bigint): Promise<string> {
         try {
             const commitmentU8Array = ZkSolana.bigintToU8Array32(commitment)
-            const txSig = await this.program.methods.validateCommitment(commitmentU8Array).accounts({
+            const txSig = await this.program.methods.validateCommitment2(commitmentU8Array).accounts({
                 authority: this.signer.publicKey,
-                mixStorage: this.pda.mixStorage
+                mixStorage: this.pda.mixStorage,
+                mixStorage2: this.pda.mixStorage2
             }).rpc({ commitment: "confirmed" })
 
             return txSig
