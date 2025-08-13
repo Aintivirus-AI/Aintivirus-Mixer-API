@@ -795,16 +795,16 @@ class MixerController {
                 publicSignals[2]
             )
 
-            try {
-                await solanaAintiVirusMixer.validateCommitment(commitment)
-            }
-            catch {
-                return {
-                    success: false,
-                    message: "Unknown commitment",
-                    data: {}
-                }
-            }
+            // try {
+            //     await solanaAintiVirusMixer.validateCommitment(commitment)
+            // }
+            // catch {
+            //     return {
+            //         success: false,
+            //         message: "Unknown commitment",
+            //         data: {}
+            //     }
+            // }
 
             // Withdrawal process
             const txSig = await solanaAintiVirusMixer.withdraw(receiver, noteObject.proof.proof, noteObject.proof.publicSignals)
@@ -930,7 +930,7 @@ class MixerController {
                 }
             }
         }
-        catch(error) {
+        catch (error) {
             console.error(error)
             throw Boom.internal((error as Error).message, { originalError: error });
         }
@@ -960,7 +960,7 @@ class MixerController {
             }
 
         }
-        catch(error) {
+        catch (error) {
             console.error(error)
             throw Boom.internal((error as Error).message, { originalError: error });
         }
@@ -989,7 +989,7 @@ class MixerController {
                 }
             }
         }
-        catch(error) {
+        catch (error) {
             console.error(error)
             throw Boom.internal((error as Error).message, { originalError: error });
         }
@@ -1018,7 +1018,7 @@ class MixerController {
                 }
             }
         }
-        catch(error) {
+        catch (error) {
             console.error(error)
             throw Boom.internal((error as Error).message, { originalError: error });
         }
@@ -1047,7 +1047,7 @@ class MixerController {
                 }
             }
         }
-        catch(error) {
+        catch (error) {
             console.error(error)
             throw Boom.internal((error as Error).message, { originalError: error });
         }
@@ -1076,7 +1076,7 @@ class MixerController {
                 }
             }
         }
-        catch(error) {
+        catch (error) {
             console.error(error)
             throw Boom.internal((error as Error).message, { originalError: error });
         }
@@ -1101,7 +1101,7 @@ class MixerController {
                 data
             }
         }
-        catch(error) {
+        catch (error) {
             throw error
         }
     }
