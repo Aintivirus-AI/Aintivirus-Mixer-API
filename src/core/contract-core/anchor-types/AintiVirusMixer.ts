@@ -493,6 +493,277 @@ export type AintivirusMixer = {
                     "type": "bytes"
                 }
             ]
+        },
+        {
+            "name": "resizeMixStorage",
+            "accounts": [
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "appendMixStorage",
+            "accounts": [
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "newSize",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "initializeMixStorage2",
+            "accounts": [
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "appendMixStorage2",
+            "accounts": [
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "newSize",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "deposit2",
+            "accounts": [
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "from",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "fromAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "escrowVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "escrowVaultForSol",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mint",
+                    "isMut": false,
+                    "isSigner": false,
+                    "docs": [
+                        "Token mint."
+                    ]
+                }
+            ],
+            "args": [
+                {
+                    "name": "mode",
+                    "type": "u8"
+                },
+                {
+                    "name": "depositAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "commitment",
+                    "type": {
+                        "array": [
+                            "u8",
+                            32
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "withdraw2",
+            "accounts": [
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "to",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "toAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "escrowVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "escrowVaultForSol",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "feeCollector",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "feeCollectorAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mint",
+                    "isMut": false,
+                    "isSigner": false,
+                    "docs": [
+                        "Token mint."
+                    ]
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "instructionData",
+                    "type": "bytes"
+                }
+            ]
+        },
+        {
+            "name": "appendMixStorage2Fixed",
+            "accounts": [
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "newSize",
+                    "type": "u64"
+                }
+            ]
         }
     ],
     "accounts": [
@@ -550,6 +821,36 @@ export type AintivirusMixer = {
                     {
                         "name": "fee",
                         "type": "u64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "mixStorage2",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "depositCommitmentsNullifierHashes",
+                        "type": {
+                            "vec": {
+                                "array": [
+                                    "u8",
+                                    32
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "name": "withdrawCommitments",
+                        "type": {
+                            "vec": {
+                                "array": [
+                                    "u8",
+                                    32
+                                ]
+                            }
+                        }
                     }
                 ]
             }
@@ -1104,6 +1405,277 @@ export const IDL: AintivirusMixer = {
                     "type": "bytes"
                 }
             ]
+        },
+        {
+            "name": "resizeMixStorage",
+            "accounts": [
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "appendMixStorage",
+            "accounts": [
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "newSize",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "initializeMixStorage2",
+            "accounts": [
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "appendMixStorage2",
+            "accounts": [
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "newSize",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "deposit2",
+            "accounts": [
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "from",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "fromAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "escrowVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "escrowVaultForSol",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mint",
+                    "isMut": false,
+                    "isSigner": false,
+                    "docs": [
+                        "Token mint."
+                    ]
+                }
+            ],
+            "args": [
+                {
+                    "name": "mode",
+                    "type": "u8"
+                },
+                {
+                    "name": "depositAmount",
+                    "type": "u64"
+                },
+                {
+                    "name": "commitment",
+                    "type": {
+                        "array": [
+                            "u8",
+                            32
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "withdraw2",
+            "accounts": [
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "to",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "toAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "authority",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "mixStorage",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "escrowVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "escrowVaultForSol",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "feeCollector",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "feeCollectorAta",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "mint",
+                    "isMut": false,
+                    "isSigner": false,
+                    "docs": [
+                        "Token mint."
+                    ]
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "instructionData",
+                    "type": "bytes"
+                }
+            ]
+        },
+        {
+            "name": "appendMixStorage2Fixed",
+            "accounts": [
+                {
+                    "name": "mixStorage2",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "signer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "newSize",
+                    "type": "u64"
+                }
+            ]
         }
     ],
     "accounts": [
@@ -1161,6 +1733,36 @@ export const IDL: AintivirusMixer = {
                     {
                         "name": "fee",
                         "type": "u64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "mixStorage2",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "depositCommitmentsNullifierHashes",
+                        "type": {
+                            "vec": {
+                                "array": [
+                                    "u8",
+                                    32
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "name": "withdrawCommitments",
+                        "type": {
+                            "vec": {
+                                "array": [
+                                    "u8",
+                                    32
+                                ]
+                            }
+                        }
                     }
                 ]
             }

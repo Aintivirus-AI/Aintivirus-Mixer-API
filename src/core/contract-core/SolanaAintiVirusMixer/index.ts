@@ -28,6 +28,7 @@ export default class SolanaAintiVirusMixer {
     private readonly provider: anchor.AnchorProvider
     private readonly pda = {} as {
         mixStorage: PublicKey
+        mixStorage2: PublicKey
         escrowVault: PublicKey
         escrowVaultForSol: PublicKey
     }
@@ -53,8 +54,13 @@ export default class SolanaAintiVirusMixer {
             [],
             new PublicKey(address)
         );
+        const [mixStorage2, mixStorage2Bump] = PublicKey.findProgramAddressSync(
+            [Buffer.from("mix_storage_2")],
+            new PublicKey(address)
+        );
 
         this.pda.mixStorage = mixStorage
+        this.pda.mixStorage2 = mixStorage2
 
         const [escrowVault,] = PublicKey.findProgramAddressSync(
             [
@@ -93,7 +99,7 @@ export default class SolanaAintiVirusMixer {
 
             console.log(this.splDecimalize(amount, decimals))
 
-            return this.program.methods.deposit(
+            const ix = await this.program.methods.deposit2(
                 mode,
                 this.splDecimalize(amount, decimals),
                 ZkSolana.bigintToU8Array32(commitment)
@@ -105,8 +111,31 @@ export default class SolanaAintiVirusMixer {
                 mint: this.mint,
                 escrowVault: this.pda.escrowVault,
                 escrowVaultForSol: this.pda.escrowVaultForSol,
-                mixStorage: this.pda.mixStorage
-            }).transaction()
+                mixStorage: this.pda.mixStorage,
+                mixStorage2: this.pda.mixStorage2
+            }).instruction()
+
+            // Create compute budget instructions
+            const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
+                units: 1_400_000, // Max allowed per Solana
+            });
+
+            const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+                microLamports: 2, // Optional, you can omit this if not prioritizing
+            });
+
+            const heapBudgetIx = ComputeBudgetProgram.requestHeapFrame({
+                bytes: 64 * 1024, // 64 KB is the current max
+            });
+
+            // Build transaction
+            const tx = new Transaction();
+            tx.add(heapBudgetIx);
+            tx.add(computeLimitIx);
+            tx.add(computePriceIx);
+            tx.add(ix);
+
+            return tx;
         }
         catch (error) {
             throw error
@@ -258,7 +287,7 @@ export default class SolanaAintiVirusMixer {
             const mixStorageData = (await this.program.account.mixStorage.all())[0].account
             const calldata = await ZkSolana.toSolanaCalldata(proof, publicSignals)
             // Build the Anchor instruction manually
-            const ix = await this.program.methods.withdraw(Buffer.from(calldata)).accounts({
+            const ix = await this.program.methods.withdraw2(Buffer.from(calldata)).accounts({
                 to,
                 toAta: toAta.address,
                 authority: this.signer.publicKey,
@@ -267,6 +296,7 @@ export default class SolanaAintiVirusMixer {
                 escrowVault: this.pda.escrowVault,
                 escrowVaultForSol: this.pda.escrowVaultForSol,
                 mixStorage: this.pda.mixStorage,
+                mixStorage2: this.pda.mixStorage2,
                 feeCollector: mixStorageData.feeCollector,
                 feeCollectorAta: mixStorageData.feeCollectorAta
             }).instruction()
